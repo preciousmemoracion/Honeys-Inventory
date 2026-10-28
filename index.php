@@ -144,10 +144,9 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
 
         /* ---------- Product showcase (icons and graphics, right side of the hero) ---------- */
         .showcase { display: grid; gap: .9rem; min-width: 0; }
-        .stage { position: relative; aspect-ratio: 4 / 4.3; overflow: hidden; border: 1px solid var(--line); border-radius: 24px; touch-action: pan-y;
-            background: linear-gradient(145deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .035));
-            box-shadow: 0 24px 60px -28px rgba(0, 0, 0, .8), inset 0 1px 0 rgba(255, 255, 255, .08); }
-        .stage:focus-visible { outline: 2px solid var(--cyan-soft); outline-offset: 3px; }
+        .stage { position: relative; aspect-ratio: 4 / 4.5; touch-action: pan-y; }
+        .stage:focus-visible { outline: none; }
+        .stage:focus-visible .slide.active .ph { outline: 2px solid var(--cyan-soft); outline-offset: 8px; }
         .slide { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end;
             opacity: 0; visibility: hidden; transition: opacity .5s ease, visibility 0s linear .5s; }
         .slide.active { opacity: 1; visibility: visible; transition: opacity .5s ease; }
@@ -169,79 +168,40 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
         .showcase { position: relative; isolation: isolate; }
         .showcase::before { content: ""; position: absolute; z-index: -1; inset: -6% 0 4% 0; border-radius: 50%; pointer-events: none; filter: blur(26px);
             background: radial-gradient(closest-side, rgba(124, 107, 255, .38), transparent 72%), radial-gradient(closest-side at 82% 78%, rgba(34, 211, 238, .2), transparent 70%); }
-        .stage { transition: border-color .25s, box-shadow .3s;
-            box-shadow: 0 30px 70px -30px rgba(99, 88, 242, .55), inset 0 1px 0 rgba(255, 255, 255, .08); }
-        .stage:hover { border-color: rgba(190, 182, 255, .4); }
-        .stage::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; transition: opacity .3s;
-            background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 30%), rgba(34, 211, 238, .16), transparent 70%); }
-        @media (hover: hover) { .stage:hover::after { opacity: 1; } }
 
+        /* Every photo is shown in a circle, tinted with the theme colors */
+        .slide { --cl: 15%; --cw: 70%; }
         .slide.has-photo .art { display: none; }
-        .ph { position: absolute; inset: 0; overflow: hidden; isolation: isolate;
-            -webkit-mask-image: linear-gradient(180deg, #000 52%, transparent 96%); mask-image: linear-gradient(180deg, #000 52%, transparent 96%); }
+        .slide.has-photo::before { content: ""; position: absolute; left: var(--cl); top: 5%; width: var(--cw); aspect-ratio: 1; border-radius: 50%;
+            border: 1px dashed rgba(190, 182, 255, .45); transform: scale(1.14); pointer-events: none; }
+        .ph { position: absolute; left: var(--cl); top: 5%; width: var(--cw); aspect-ratio: 1; overflow: hidden; isolation: isolate; border-radius: 50%;
+            background: #141A4A;
+            box-shadow: 0 0 0 10px rgba(255, 255, 255, .05), 0 0 0 11px rgba(190, 182, 255, .25), 0 28px 60px -18px rgba(0, 0, 0, .75), 0 0 70px -10px rgba(124, 107, 255, .6); }
         .ph img { display: block; width: 100%; height: 100%; object-fit: cover; filter: saturate(1.08) contrast(1.03); }
-        .ph::after { content: ""; position: absolute; inset: 0; pointer-events: none;
-            background: linear-gradient(135deg, rgba(124, 107, 255, .32), rgba(34, 211, 238, .10) 55%, transparent),
-                        linear-gradient(0deg, rgba(10, 14, 42, .45), transparent 50%); }
+        .ph::after { content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18);
+            background: linear-gradient(135deg, rgba(124, 107, 255, .28), rgba(34, 211, 238, .08) 55%, transparent),
+                        linear-gradient(0deg, rgba(10, 14, 42, .35), transparent 45%); }
 
-        /* White-background product shot: sits on a round plate that matches the theme */
-        .slide.cutout .ph { inset: auto; left: 17%; top: 5%; width: 66%; height: auto; aspect-ratio: 1; border-radius: 50%;
-            -webkit-mask-image: none; mask-image: none;
-            background: radial-gradient(circle at 34% 28%, #FFFFFF 0%, #EEEBFF 62%, #D6D1FF 100%);
-            box-shadow: 0 0 0 12px rgba(255, 255, 255, .05), 0 0 0 13px rgba(190, 182, 255, .25), 0 28px 60px -18px rgba(0, 0, 0, .75), 0 0 70px -10px rgba(124, 107, 255, .6); }
+        /* White-background product shot: sits on a light plate inside the circle */
+        .slide.cutout .ph { background: radial-gradient(circle at 34% 28%, #FFFFFF 0%, #EEEBFF 62%, #D6D1FF 100%); }
         .slide.cutout .ph img { object-fit: contain; mix-blend-mode: multiply; transform: scale(1.1); filter: none; }
         .slide.cutout .ph::after { background: radial-gradient(circle at 78% 86%, rgba(124, 107, 255, .3), transparent 62%); }
 
-        /* Expand button and photo viewer */
-        .ex { position: absolute; top: .75rem; left: .75rem; z-index: 2; display: none; place-items: center; width: 2.3rem; height: 2.3rem;
-            border: 1px solid var(--line-strong); border-radius: 50%; background: rgba(10, 14, 42, .65); color: #fff; cursor: pointer;
-            -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: background .15s, transform .15s; }
-        .ex svg { width: 1.1rem; height: 1.1rem; fill: currentColor; }
-        .ex:hover { background: rgba(124, 107, 255, .8); transform: scale(1.08); }
-        .stage:has(.slide.active.has-photo) .ex { display: grid; }
-        .showcase.lb-open .pg { animation-play-state: paused !important; }
-        dialog.lightbox { width: min(880px, calc(100% - 2rem)); max-height: calc(100dvh - 2rem); margin: auto; padding: 0; overflow: hidden; color: var(--text);
-            border: 1px solid var(--line-strong); border-radius: 22px; background: linear-gradient(145deg, rgba(34, 40, 104, .97), rgba(14, 18, 54, .98));
-            box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .85), inset 0 1px 0 rgba(255, 255, 255, .1); }
-        dialog.lightbox::backdrop { background: rgba(4, 6, 24, .78); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
-        .lightbox .x { position: absolute; top: .75rem; right: .75rem; z-index: 2; display: grid; place-items: center; width: 2.4rem; height: 2.4rem;
-            border: 1px solid var(--line-strong); border-radius: 50%; background: rgba(10, 14, 42, .7); color: #fff; cursor: pointer; }
-        .lightbox .x:hover { background: rgba(124, 107, 255, .8); }
-        .lightbox .x svg { fill: currentColor; }
-        .lightbox img { display: block; width: 100%; max-height: calc(100dvh - 10.5rem); object-fit: contain; background: #0A0E2A; }
-        .lb-cap { padding: 1rem 1.4rem 1.3rem; }
-        .lb-cap h3 { margin: 0 0 .2rem; font: 700 1.3rem var(--display); }
-        .lb-cap p { margin: 0; color: var(--muted); }
-        .cap { position: relative; padding: 3.5rem 1.4rem 1.4rem; background: linear-gradient(0deg, rgba(8, 11, 36, .95), rgba(8, 11, 36, .65) 60%, transparent); }
+        .cap { position: relative; padding: 0 .5rem .2rem; text-align: center; }
         .cap .chip { display: inline-block; margin-bottom: .5rem; padding: .15rem .65rem; border-radius: 999px; background: var(--ok-bg); color: #9DF3E9;
             font-size: .8rem; font-weight: 600; }
         .cap h3 { margin: 0 0 .25rem; font: 700 clamp(1.3rem, 2.4vw, 1.7rem) var(--display); letter-spacing: -.01em; }
-        .cap p { margin: 0; color: var(--muted); font-size: .95rem; line-height: 1.45; }
+        .cap p { max-width: 30em; margin: 0 auto; color: var(--muted); font-size: .95rem; line-height: 1.45; }
 
-        .nv { position: absolute; top: 42%; z-index: 2; display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border: 1px solid var(--line-strong);
-            border-radius: 50%; background: rgba(10, 14, 42, .65); color: #fff; cursor: pointer; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-            transition: background .15s, transform .15s; }
-        .nv svg { fill: currentColor; }
-        .nv:hover { background: rgba(124, 107, 255, .8); transform: scale(1.08); }
-        .nv.prev { left: .75rem; }
-        .nv.next { right: .75rem; }
-        .pp { position: absolute; top: .75rem; right: .75rem; z-index: 2; padding: .3rem .7rem; border: 1px solid var(--line-strong); border-radius: 999px;
-            background: rgba(10, 14, 42, .65); color: var(--cyan-soft); font: 600 .8rem var(--body); cursor: pointer; }
-        .pp:hover { background: rgba(255, 255, 255, .14); }
 
-        .thumbs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .6rem; }
-        .thumb { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .15rem;
-            min-height: 3.6rem; padding: .5rem .4rem .6rem; border: 1px solid var(--line); border-radius: 12px;
-            background: rgba(255, 255, 255, .05); color: var(--muted); font: 600 .85rem var(--body); cursor: pointer;
-            transition: background .15s, color .15s, border-color .15s; }
-        .thumb svg { width: 1.3rem; height: 1.3rem; fill: currentColor; }
-        .thumb:hover { background: rgba(255, 255, 255, .1); color: var(--text); }
-        .thumb.active { color: #fff; border-color: rgba(190, 182, 255, .55); background: rgba(124, 107, 255, .22); }
-        .thumb .pg { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; transform: scaleX(0); transform-origin: left;
-            background: linear-gradient(90deg, var(--cyan), var(--violet)); }
-        .thumb.active .pg { transform: scaleX(1); }
-        .showcase.paused .pg { animation-play-state: paused !important; }
-        @media (hover: hover) { .showcase:hover .pg { animation-play-state: paused; } }
+        .dots { display: flex; justify-content: center; gap: .5rem; }
+        .dot { position: relative; width: 2.8rem; height: 1.6rem; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 8px; }
+        .dot::before, .dot .pg { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 6px; margin-top: -3px; border-radius: 999px; }
+        .dot::before { background: rgba(255, 255, 255, .18); transition: background .15s; }
+        .dot:hover::before { background: rgba(255, 255, 255, .32); }
+        .dot:focus-visible { outline: 2px solid var(--cyan-soft); outline-offset: 2px; }
+        .dot .pg { transform: scaleX(0); transform-origin: left; background: linear-gradient(90deg, var(--cyan), var(--violet)); }
+        .dot.active .pg { transform: scaleX(1); }
 
         /* ---------- Features ---------- */
         .section-head { margin: 0 0 1.75rem; }
@@ -309,30 +269,30 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
         @media (prefers-reduced-motion: no-preference) {
             .msg.error { animation: nudge .35s ease-out; }
             dialog.signin[open] { animation: pop .22s ease-out; }
-            .thumb.active .pg { transform: scaleX(0); animation: prog 5s linear forwards; }
+            .dot.active .pg { transform: scaleX(0); animation: prog 5s linear forwards; }
             .slide.active .art > svg { animation: bob 4.5s ease-in-out infinite; }
             .slide.active .fl { animation: drift 5s ease-in-out infinite; }
             .slide.active .fl.b { animation-delay: -1.7s; }
             .slide.active .fl.c { animation-delay: -3.2s; }
             .slide.has-photo.active .ph img { animation: kb 9s ease-out both; }
             .slide.cutout.has-photo.active .ph img { animation: none; }
-            .slide.has-photo .ph { transform: translate3d(calc(var(--px, 0) * -10px), calc(var(--py, 0) * -8px), 0) scale(1.07); transition: transform .3s ease-out; }
-            .slide.cutout.has-photo .ph { transform: translate3d(calc(var(--px, 0) * 9px), calc(var(--py, 0) * 7px), 0); }
-            dialog.lightbox[open] { animation: pop .22s ease-out; }
+            .slide.has-photo .ph { transform: translate3d(calc(var(--px, 0) * 9px), calc(var(--py, 0) * 7px), 0); transition: transform .3s ease-out; }
+            .slide.has-photo.active::before { animation: spin 40s linear infinite; }
             @keyframes nudge { 25% { transform: translateX(-5px); } 55% { transform: translateX(4px); } 80% { transform: translateX(-2px); } }
             @keyframes pop   { from { opacity: 0; transform: translateY(10px) scale(.98); } }
             @keyframes prog  { to { transform: scaleX(1); } }
             @keyframes bob   { 50% { transform: translateY(-8px) rotate(-1deg); } }
             @keyframes drift { 50% { transform: translateY(-9px); } }
+            @keyframes spin  { to { transform: scale(1.14) rotate(360deg); } }
             @keyframes kb    { from { transform: scale(1.08); } to { transform: scale(1); } }
         }
 
         @media (max-width: 900px) {
             .hero { grid-template-columns: minmax(0, 1fr); }
             .features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .stage { aspect-ratio: 4 / 4.2; }
+            .stage { aspect-ratio: 4 / 4.5; }
             .showcase { width: 100%; max-width: 540px; margin-inline: auto; }
-            .slide.cutout .ph { left: 20%; width: 60%; }
+            .slide { --cl: 16%; --cw: 68%; }
         }
         @media (max-width: 560px) {
             .features { grid-template-columns: minmax(0, 1fr); }
@@ -340,12 +300,10 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
             dialog.signin { padding: 1.8rem 1.25rem 1.5rem; }
         }
         @media (max-width: 430px) {
-            .stage { aspect-ratio: 1 / 1.12; }
-            .slide.cutout .ph { left: 18%; width: 64%; }
-            .nv { width: 2.3rem; height: 2.3rem; }
+            .stage { aspect-ratio: 1 / 1.2; }
+            .slide { --cl: 18%; --cw: 64%; }
             .fl { width: 2.3rem; height: 2.3rem; }
             .fl.c { display: none; }
-            .thumb { font-size: .78rem; min-height: 3.3rem; }
         }
 
         /* ---------- Enhancements: nav, reveal, contact ---------- */
@@ -486,8 +444,8 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
             </ul>
         </div>
 
-        <!-- Product showcase. Photos go in an "images" folder next to index.php:
-             whole-chicken.jpeg, chicken-cuts.jpg, hotdog.jpg, frozen-food.jpg
+        <!-- Product showcase. Photos go in images/img/ next to index.php:
+             whole-chicken.jpeg, hotdog.jpg, frozen-food.jpg
              A photo covers its slide automatically. If a file is missing, the drawn graphic shows instead. -->
         <div class="showcase reveal" id="showcase" style="--rd: .12s" role="region" aria-roledescription="carousel" aria-label="Honey's products">
             <div class="stage" id="stage" tabindex="0">
@@ -548,13 +506,13 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
                     <div class="cap"><span class="chip">Keep frozen</span><h3>Frozen favorites</h3><p>Ham, tocino and other ready-to-cook packs, kept cold until you take them home.</p></div>
                 </article>
 
-                <button class="nv prev" type="button" id="ssPrev" aria-label="Previous"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
-                <button class="nv next" type="button" id="ssNext" aria-label="Next"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></button>
-                <button class="pp" type="button" id="ssPause" aria-pressed="false">Pause</button>
-                <button class="ex" type="button" id="ssExpand" aria-label="View larger photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
             </div>
 
-          
+            <div class="dots" role="group" aria-label="Choose a product">
+                <button class="dot active" type="button" aria-label="Whole dressed chicken" aria-current="true"><span class="pg"></span></button>
+                <button class="dot" type="button" aria-label="Hotdogs and sausages"><span class="pg"></span></button>
+                <button class="dot" type="button" aria-label="Frozen favorites"><span class="pg"></span></button>
+            </div>
         </div>
     </section>
 
@@ -671,14 +629,6 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
 <button class="to-top" id="toTop" type="button" aria-label="Back to top">
     <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.41 15.41 12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
 </button>
-
-<dialog class="lightbox" id="lightbox" aria-label="Product photo">
-    <button class="x" type="button" data-close-lb aria-label="Close photo">
-        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-    </button>
-    <img src="" alt="">
-    <div class="lb-cap"><h3></h3><p></p></div>
-</dialog>
 
 <?php if (!$loggedIn): ?>
 <dialog class="signin" id="loginModal" aria-labelledby="loginTitle">
@@ -850,9 +800,8 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
     var box = document.getElementById('showcase');
     if (box) {
         var slides = Array.prototype.slice.call(box.querySelectorAll('.slide'));
-        var thumbs = Array.prototype.slice.call(box.querySelectorAll('.thumb'));
+        var thumbs = Array.prototype.slice.call(box.querySelectorAll('.dot'));
         var stage = document.getElementById('stage');
-        var pause = document.getElementById('ssPause');
         var cur = 0;
 
         function go(n) {
@@ -867,18 +816,10 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
             });
         }
         thumbs.forEach(function (t, k) { t.addEventListener('click', function () { go(k); }); });
-        document.getElementById('ssPrev').addEventListener('click', function () { go(cur - 1); });
-        document.getElementById('ssNext').addEventListener('click', function () { go(cur + 1); });
 
         // The progress bar on the active tab drives autoplay: when it finishes, go to the next slide.
         box.addEventListener('animationend', function (e) {
             if (e.target.classList && e.target.classList.contains('pg')) go(cur + 1);
-        });
-
-        pause.addEventListener('click', function () {
-            var p = box.classList.toggle('paused');
-            pause.textContent = p ? 'Play' : 'Pause';
-            pause.setAttribute('aria-pressed', p ? 'true' : 'false');
         });
 
         stage.addEventListener('keydown', function (e) {
@@ -908,26 +849,6 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
             stage.style.setProperty('--px', 0);
             stage.style.setProperty('--py', 0);
         });
-
-        /* Larger photo viewer */
-        var lb = document.getElementById('lightbox');
-        var ex = document.getElementById('ssExpand');
-        if (lb && ex && typeof lb.showModal === 'function') {
-            ex.addEventListener('click', function () {
-                var s = slides[cur], im = s.querySelector('.ph img');
-                if (!im) return;
-                var li = lb.querySelector('img');
-                li.src = im.currentSrc || im.src;
-                li.alt = im.alt;
-                lb.querySelector('h3').textContent = s.querySelector('.cap h3').textContent;
-                lb.querySelector('p').textContent = s.querySelector('.cap p').textContent;
-                box.classList.add('lb-open');
-                lb.showModal();
-            });
-            lb.querySelector('[data-close-lb]').addEventListener('click', function () { lb.close(); });
-            lb.addEventListener('mousedown', function (e) { if (e.target === lb) lb.close(); });
-            lb.addEventListener('close', function () { box.classList.remove('lb-open'); });
-        }
 
         go(0);
     }
