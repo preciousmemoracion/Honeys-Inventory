@@ -49,6 +49,7 @@ $stats      = ['low' => $lowCount]; // lets the sidebar show the low-stock count
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,600..800&family=Figtree:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="theme.css">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
 </head>
 <body>
 

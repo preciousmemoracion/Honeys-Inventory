@@ -26,6 +26,12 @@ const ADMIN_PASSWORD_HASH = '$2b$10$MBxyWysxSBIoWoVaZyxjK.SWlKb4niAtkbxyJD3obJTC
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_SECONDS     = 60;
 
+/* Shown in the Contact section. Leave a value empty to hide it. */
+const CONTACT_PHONE = '';   // e.g. '0912 345 6789'
+const CONTACT_EMAIL = '';   // e.g. 'honeys@example.com'
+const CONTACT_HOURS = '';   // e.g. 'Mon to Sat, 7:00 AM to 6:00 PM'
+const SHOP_ADDRESS  = 'Poblacion, Inabanga, Bohol';
+
 /* Only allow redirects to a local page like "history.php?receipt=3" */
 $next = (string)($_GET['next'] ?? $_POST['next'] ?? '');
 if (!preg_match('/^[A-Za-z0-9_]+\.php(\?[A-Za-z0-9_=&%.-]*)?$/', $next)) {
@@ -102,6 +108,9 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Honey's Dressed Chicken and Frozen Food | Inventory</title>
     <meta name="description" content="Inventory, sales and delivery tracking for Honey's Dressed Chicken and Frozen Food.">
+    <meta name="theme-color" content="#0A0E2A">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script>document.documentElement.classList.add('js');</script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,600..800&family=Figtree:wght@400;500;600;700&display=swap">
@@ -227,30 +236,147 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
             .brand small { display: none; }
             dialog.signin { padding: 1.8rem 1.25rem 1.5rem; }
         }
+
+        /* ---------- Enhancements: nav, demo, reveal, contact ---------- */
+        html { scroll-padding-top: 5rem; }
+        section[id] { scroll-margin-top: 4.5rem; }
+        .lp-nav { transition: box-shadow .2s, background .2s; }
+        .lp-nav.scrolled { box-shadow: 0 10px 30px -18px rgba(0, 0, 0, .8); background: rgba(10, 14, 42, .92); }
+        .nav-links { display: flex; align-items: center; gap: .25rem; margin: 0 auto 0 1.5rem; padding: 0; list-style: none; }
+        .nav-links a { position: relative; display: block; padding: .55rem .95rem; border-radius: 10px; color: var(--muted);
+            font-weight: 600; font-size: .98rem; text-decoration: none; }
+        .nav-links a:hover { color: var(--text); background: rgba(255, 255, 255, .07); }
+        .nav-links a.active { color: #fff; }
+        .nav-links a.active::after { content: ""; position: absolute; left: .95rem; right: .95rem; bottom: .2rem; height: 2px; border-radius: 2px;
+            background: linear-gradient(90deg, var(--cyan), var(--violet)); }
+        .nav-right { display: flex; align-items: center; gap: .6rem; }
+        .menu-toggle { display: none; place-items: center; width: 2.7rem; height: 2.7rem; border: 1px solid var(--line-strong); border-radius: 12px;
+            background: rgba(255, 255, 255, .07); color: var(--text); cursor: pointer; }
+        .menu-toggle svg { fill: currentColor; }
+        .menu-toggle .close { display: none; }
+        .menu-toggle[aria-expanded="true"] .open { display: none; }
+        .menu-toggle[aria-expanded="true"] .close { display: block; }
+
+        .hero .blob { position: absolute; z-index: -1; width: 420px; height: 420px; right: -120px; top: -40px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(124, 107, 255, .35), transparent 65%); filter: blur(10px); pointer-events: none; }
+        .hero { position: relative; }
+        .hero .meta { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin: 1.75rem 0 0; padding: 0; list-style: none; color: var(--muted); font-size: .92rem; }
+        .hero .meta li::before { content: "\2713"; margin-right: .45rem; color: var(--ok); font-weight: 700; }
+
+        .demo-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+        .demo-head button { border: 1px solid var(--line-strong); border-radius: 8px; background: transparent; color: var(--cyan-soft);
+            font: 600 .82rem var(--body); padding: .3rem .65rem; cursor: pointer; }
+        .demo-head button:hover { background: rgba(255, 255, 255, .1); }
+        .demo .tag { padding: .1rem .55rem; border-radius: 999px; background: var(--ok-bg); color: #9DF3E9; font-size: .78rem; font-weight: 600; }
+        .demo .low .tag { background: var(--low-bg); color: var(--low); }
+        .demo .out .tag { background: var(--out-bg); color: var(--out-text); }
+        .demo .item p span { display: inline-flex; align-items: center; gap: .55rem; }
+        .demo .bar::before { width: var(--w); transition: width .35s cubic-bezier(.2, .7, .2, 1); animation-fill-mode: backwards; }
+        .demo .bar i { left: var(--t, 33%); }
+        .demo .out .bar::before { background: linear-gradient(90deg, #FFB085, var(--out)); }
+        .demo .ctl { display: flex; gap: .5rem; margin-top: .75rem; }
+        .demo .ctl button { flex: 1; min-height: 2.2rem; border: 1px solid var(--line-strong); border-radius: 10px; background: rgba(255, 255, 255, .06);
+            color: var(--text); font: 600 .85rem var(--body); cursor: pointer; transition: background .15s, transform .1s; }
+        .demo .ctl button:hover { background: rgba(255, 255, 255, .14); }
+        .demo .ctl button:active { transform: scale(.97); }
+        .demo .ctl button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+        .demo em { font-style: normal; }
+        .demo-note { margin: 0; color: var(--muted); font-size: .82rem; }
+
+        .feature { position: relative; overflow: hidden; transition: transform .2s, border-color .2s; }
+        .feature::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .25s;
+            background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 0%), rgba(124, 107, 255, .28), transparent 70%); }
+        .feature:hover { transform: translateY(-4px); border-color: rgba(190, 182, 255, .4); }
+        .feature:hover::before { opacity: 1; }
+        .feature > * { position: relative; }
+
+        .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin: 0 0 clamp(3rem, 7vw, 5rem); padding: 0; list-style: none; counter-reset: s; }
+        .steps li { counter-increment: s; position: relative; padding: 1.25rem 1.25rem 1.25rem 4.25rem; border: 1px dashed var(--line-strong); border-radius: var(--radius); }
+        .steps li::before { content: counter(s); position: absolute; left: 1.1rem; top: 1.15rem; display: grid; place-items: center; width: 2.3rem; height: 2.3rem;
+            border-radius: 50%; background: linear-gradient(135deg, var(--violet), var(--cyan)); color: #fff; font: 700 1.1rem var(--display); }
+        .steps b { display: block; margin-bottom: .2rem; font: 700 1.05rem var(--display); }
+        .steps span { color: var(--muted); font-size: .94rem; }
+
+        .contact { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; padding-bottom: clamp(3rem, 7vw, 5rem); }
+        .ccard { display: flex; flex-direction: column; align-items: flex-start; gap: .35rem; padding: 1.4rem 1.25rem; border: 1px solid var(--line); border-radius: var(--radius);
+            background: linear-gradient(145deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .03)); }
+        .ccard h3 { margin: 0; font-size: 1.1rem; }
+        .ccard p { margin: 0; color: var(--muted); }
+        .ccard a:not(.btn) { color: var(--text); font-weight: 600; word-break: break-word; }
+        .ccard .btn { margin-top: auto; }
+        .ccard .ico { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; margin-bottom: .5rem; border-radius: 12px;
+            background: linear-gradient(135deg, rgba(124, 107, 255, .35), rgba(34, 211, 238, .18)); color: var(--cyan-soft); }
+        .ccard .ico svg { fill: currentColor; }
+
+        .lp-foot .links { display: flex; gap: 1.1rem; }
+        .lp-foot .links a { color: var(--muted); text-decoration: none; }
+        .lp-foot .links a:hover { color: var(--text); text-decoration: underline; }
+
+        .to-top { position: fixed; right: 1.1rem; bottom: 1.1rem; z-index: 15; display: grid; place-items: center; width: 2.9rem; height: 2.9rem;
+            border: 1px solid var(--line-strong); border-radius: 50%; background: rgba(20, 26, 74, .92); color: var(--text); cursor: pointer;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, .45); opacity: 0; transform: translateY(10px); pointer-events: none; transition: opacity .2s, transform .2s; }
+        .to-top.show { opacity: 1; transform: none; pointer-events: auto; }
+        .to-top svg { fill: currentColor; }
+
+        .js .reveal { opacity: 0; transform: translateY(20px); transition: opacity .6s ease, transform .6s ease; transition-delay: var(--rd, 0s); }
+        .js .reveal.in { opacity: 1; transform: none; }
+        @media (prefers-reduced-motion: reduce) {
+            .js .reveal { opacity: 1; transform: none; transition: none; }
+            .feature, .feature:hover { transform: none; }
+        }
+        @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+
+        @media (max-width: 820px) {
+            .menu-toggle { display: grid; }
+            .nav-links { position: absolute; left: 0; right: 0; top: 100%; flex-direction: column; align-items: stretch; gap: .2rem; margin: 0;
+                padding: .75rem 1.25rem 1rem; background: rgba(12, 16, 48, .97); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+                border-bottom: 1px solid var(--line); box-shadow: 0 18px 30px -20px rgba(0, 0, 0, .8);
+                visibility: hidden; opacity: 0; transform: translateY(-8px); transition: opacity .2s, transform .2s, visibility 0s linear .2s; }
+            .nav-links.open { visibility: visible; opacity: 1; transform: none; transition: opacity .2s, transform .2s; }
+            .nav-links a { padding: .85rem 1rem; font-size: 1.05rem; }
+            .nav-links a.active::after { left: 1rem; right: auto; width: 2rem; bottom: .45rem; }
+            .nav-right { margin-left: auto; }
+            .steps { grid-template-columns: minmax(0, 1fr); }
+        }
+        @media (max-width: 430px) { .nav-right .btn { padding-inline: .9rem; } }
     </style>
 </head>
 <body>
 
-<header class="lp-nav">
+<header class="lp-nav" id="top">
     <div class="wrap">
-        <a class="brand" href="index.php">
+        <a class="brand" href="#home">
             <span class="brand-mark" aria-hidden="true">H</span>
             <span>
                 <strong>Honey's</strong>
                 <small>Dressed Chicken and Frozen Food</small>
             </span>
         </a>
-        <?php if ($loggedIn): ?>
-            <a class="btn primary" href="dashboard.php">Open dashboard</a>
-        <?php else: ?>
-            <a class="btn primary" href="<?= e($signInHref) ?>" data-open-login>Sign in</a>
-        <?php endif; ?>
+
+        <ul class="nav-links" id="navLinks">
+            <li><a href="#home" data-spy="home">Home</a></li>
+            <li><a href="#features" data-spy="features">Features</a></li>
+            <li><a href="#contact" data-spy="contact">Contact</a></li>
+        </ul>
+
+        <div class="nav-right">
+            <?php if ($loggedIn): ?>
+                <a class="btn primary" href="dashboard.php">Open dashboard</a>
+            <?php else: ?>
+                <a class="btn primary" href="<?= e($signInHref) ?>" data-open-login>Sign in</a>
+            <?php endif; ?>
+            <button class="menu-toggle" id="menuToggle" type="button" aria-controls="navLinks" aria-expanded="false" aria-label="Menu">
+                <svg class="open" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+                <svg class="close" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+        </div>
     </div>
 </header>
 
 <main>
-    <section class="wrap hero" aria-labelledby="hero-title">
-        <div>
+    <section class="wrap hero" id="home" aria-labelledby="hero-title">
+        <span class="blob" aria-hidden="true"></span>
+        <div class="reveal">
             <p class="eyebrow">Inventory system for Honey's</p>
             <h1 id="hero-title">Know what's in the freezer, <em>always.</em></h1>
             <p class="lead">Keep track of stock, ring up customers, and record supplier deliveries in one place, so nothing runs out unnoticed.</p>
@@ -262,57 +388,77 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
                 <?php endif; ?>
                 <a class="btn" href="#features">See what it does</a>
             </div>
+            <ul class="meta">
+                <li>Low-stock alerts</li>
+                <li>Printable receipts</li>
+                <li>CSV exports</li>
+            </ul>
         </div>
 
-        <div class="rack" aria-hidden="true">
-            <h2>Stock levels at a glance</h2>
-            <div>
-                <p><b>Whole dressed chicken</b><span>84 kg</span></p>
-                <span class="bar" style="--w: 84%; --d: .15s"><i></i></span>
+        <div class="rack demo reveal" id="demo" style="--rd: .12s" aria-label="Interactive stock demo">
+            <div class="demo-head">
+                <h2>Try it: live stock demo</h2>
+                <button type="button" id="demoReset">Reset</button>
             </div>
-            <div>
-                <p><b>Chicken wings</b><span>58 kg</span></p>
-                <span class="bar" style="--w: 58%; --d: .3s"><i></i></span>
+
+            <div class="item" data-name="Whole dressed chicken" data-qty="84" data-start="84" data-low="25" data-max="100" data-unit="kg">
+                <p><b>Whole dressed chicken</b><span><em class="val"></em><em class="tag"></em></span></p>
+                <span class="bar"><i></i></span>
+                <div class="ctl"><button type="button" data-act="sell">Sell 10</button><button type="button" data-act="recv">Receive 10</button></div>
             </div>
-            <div class="low">
-                <p><b>Frozen hotdog</b><span>Low stock</span></p>
-                <span class="bar" style="--w: 20%; --d: .45s"><i></i></span>
+            <div class="item" data-name="Chicken wings" data-qty="58" data-start="58" data-low="20" data-max="100" data-unit="kg">
+                <p><b>Chicken wings</b><span><em class="val"></em><em class="tag"></em></span></p>
+                <span class="bar"><i></i></span>
+                <div class="ctl"><button type="button" data-act="sell">Sell 10</button><button type="button" data-act="recv">Receive 10</button></div>
             </div>
+            <div class="item" data-name="Frozen hotdog" data-qty="20" data-start="20" data-low="20" data-max="100" data-unit="packs">
+                <p><b>Frozen hotdog</b><span><em class="val"></em><em class="tag"></em></span></p>
+                <span class="bar"><i></i></span>
+                <div class="ctl"><button type="button" data-act="sell">Sell 10</button><button type="button" data-act="recv">Receive 10</button></div>
+            </div>
+
+            <p class="demo-note" id="demoMsg" role="status" aria-live="polite">Sample numbers only. The white tick marks where low stock starts.</p>
         </div>
     </section>
 
     <section class="wrap" id="features" aria-labelledby="features-title">
-        <div class="section-head">
+        <div class="section-head reveal">
             <h2 id="features-title">Everything the shop needs day to day</h2>
             <p>Simple tools for the counter and the stockroom.</p>
         </div>
         <div class="features">
-            <article class="feature">
+            <article class="feature reveal">
                 <span class="ico" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2l-5.5 9h11L12 2zm5.5 11c-2.49 0-4.5 2.01-4.5 4.5s2.01 4.5 4.5 4.5 4.5-2.01 4.5-4.5-2.01-4.5-4.5-4.5zM3 21.5h8v-8H3v8z"/></svg></span>
                 <h3>Products and stock</h3>
                 <p>See every item, its price and how much is left, with warnings when stock runs low.</p>
             </article>
-            <article class="feature">
+            <article class="feature reveal" style="--rd: .08s">
                 <span class="ico" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M18 17H6v-2h12v2zm0-4H6v-2h12v2zm0-4H6V7h12v2zM3 22l1.5-1.5L6 22l1.5-1.5L9 22l1.5-1.5L12 22l1.5-1.5L15 22l1.5-1.5L18 22l1.5-1.5L21 22V2l-1.5 1.5L18 2l-1.5 1.5L15 2l-1.5 1.5L12 2l-1.5 1.5L9 2 7.5 3.5 6 2 4.5 3.5 3 2v20z"/></svg></span>
                 <h3>Sales and receipts</h3>
                 <p>Ring up a sale, print the receipt, and look up past sales any time.</p>
             </article>
-            <article class="feature">
+            <article class="feature reveal" style="--rd: .16s">
                 <span class="ico" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M19 3H4.99c-1.11 0-1.98.9-1.98 2L3 19c0 1.1.88 2 1.99 2H19c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 12h-4c0 1.66-1.35 3-3 3s-3-1.34-3-3H4.99V5H19v10zm-3-5h-2V7h-4v3H8l4 4 4-4z"/></svg></span>
                 <h3>Deliveries</h3>
                 <p>Record what suppliers bring in and stock levels update right away.</p>
             </article>
-            <article class="feature">
+            <article class="feature reveal" style="--rd: .24s">
                 <span class="ico" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z"/></svg></span>
                 <h3>Reports</h3>
                 <p>Daily sales, best sellers and category totals, ready to print or export to CSV.</p>
             </article>
         </div>
+
+        <ol class="steps">
+            <li class="reveal"><b>Add your products</b><span>Set prices, units and when to be warned about low stock.</span></li>
+            <li class="reveal" style="--rd: .1s"><b>Sell and receive</b><span>Sales take stock out and deliveries put it back, automatically.</span></li>
+            <li class="reveal" style="--rd: .2s"><b>Check the numbers</b><span>Open reports to see what sells best and what to reorder.</span></li>
+        </ol>
     </section>
 
     <?php if (!$loggedIn): ?>
     <section class="wrap" aria-label="Sign in">
-        <div class="band">
+        <div class="band reveal">
             <div>
                 <h2>Ready to get started?</h2>
                 <p>Only the admin account can sign in.</p>
@@ -321,14 +467,73 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
         </div>
     </section>
     <?php endif; ?>
+
+    <section class="wrap" id="contact" aria-labelledby="contact-title">
+        <div class="section-head reveal">
+            <h2 id="contact-title">Contact and location</h2>
+            <p>Drop by the shop or reach us using the details below.</p>
+        </div>
+        <div class="contact">
+            <article class="ccard reveal">
+                <span class="ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg></span>
+                <h3>Visit us</h3>
+                <p>Honey's Dressed Chicken and Frozen Food<br><?= e(SHOP_ADDRESS) ?></p>
+                <a class="btn" href="https://www.google.com/maps/search/?api=1&amp;query=<?= e(urlencode("Honey's Dressed Chicken and Frozen Food, " . SHOP_ADDRESS)) ?>" target="_blank" rel="noopener">Get directions</a>
+            </article>
+
+            <?php if (CONTACT_PHONE !== ''): ?>
+            <article class="ccard reveal" style="--rd: .08s">
+                <span class="ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24c1.12.37 2.33.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2z"/></svg></span>
+                <h3>Call or text</h3>
+                <p><a href="tel:<?= e(preg_replace('/[^0-9+]/', '', CONTACT_PHONE)) ?>"><?= e(CONTACT_PHONE) ?></a></p>
+            </article>
+            <?php endif; ?>
+
+            <?php if (CONTACT_EMAIL !== ''): ?>
+            <article class="ccard reveal" style="--rd: .16s">
+                <span class="ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg></span>
+                <h3>Email</h3>
+                <p><a href="mailto:<?= e(CONTACT_EMAIL) ?>"><?= e(CONTACT_EMAIL) ?></a></p>
+            </article>
+            <?php endif; ?>
+
+            <?php if (CONTACT_HOURS !== ''): ?>
+            <article class="ccard reveal" style="--rd: .24s">
+                <span class="ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z"/></svg></span>
+                <h3>Opening hours</h3>
+                <p><?= e(CONTACT_HOURS) ?></p>
+            </article>
+            <?php endif; ?>
+
+            <article class="ccard reveal" style="--rd: .32s">
+                <span class="ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg></span>
+                <h3>Staff access</h3>
+                <p>Shop staff can sign in to manage stock, sales and reports.</p>
+                <?php if ($loggedIn): ?>
+                    <a class="btn primary" href="dashboard.php">Open dashboard</a>
+                <?php else: ?>
+                    <a class="btn primary" href="<?= e($signInHref) ?>" data-open-login>Sign in</a>
+                <?php endif; ?>
+            </article>
+        </div>
+    </section>
 </main>
 
 <footer class="lp-foot">
     <div class="wrap">
         <span>&copy; <?= date('Y') ?> Honey's Dressed Chicken and Frozen Food</span>
-        <span>Poblacion, Inabanga, Bohol</span>
+        <nav class="links" aria-label="Footer">
+            <a href="#home">Home</a>
+            <a href="#features">Features</a>
+            <a href="#contact">Contact</a>
+        </nav>
+        <span><?= e(SHOP_ADDRESS) ?></span>
     </div>
 </footer>
+
+<button class="to-top" id="toTop" type="button" aria-label="Back to top">
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.41 15.41 12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
+</button>
 
 <?php if (!$loggedIn): ?>
 <dialog class="signin" id="loginModal" aria-labelledby="loginTitle">
@@ -429,5 +634,111 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
 })();
 </script>
 <?php endif; ?>
+<script>
+(function () {
+    var nav = document.querySelector('.lp-nav');
+    var links = document.getElementById('navLinks');
+    var toggle = document.getElementById('menuToggle');
+    var toTop = document.getElementById('toTop');
+
+    /* Mobile menu */
+    function setMenu(open) {
+        links.classList.toggle('open', open);
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    toggle.addEventListener('click', function () { setMenu(!links.classList.contains('open')); });
+    links.addEventListener('click', function (e) { if (e.target.closest('a')) setMenu(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+    document.addEventListener('click', function (e) { if (!nav.contains(e.target)) setMenu(false); });
+    window.addEventListener('resize', function () { if (window.innerWidth > 820) setMenu(false); });
+
+    /* Header shadow and back-to-top */
+    function onScroll() {
+        nav.classList.toggle('scrolled', window.scrollY > 8);
+        toTop.classList.toggle('show', window.scrollY > 600);
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    toTop.addEventListener('click', function () { window.scrollTo({ top: 0 }); });
+
+    /* Highlight the nav link for the section in view */
+    var spy = {};
+    Array.prototype.forEach.call(document.querySelectorAll('[data-spy]'), function (a) { spy[a.getAttribute('data-spy')] = a; });
+    function markActive() {
+        var y = window.scrollY + window.innerHeight * 0.35, current = 'home';
+        Object.keys(spy).forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el && el.getBoundingClientRect().top + window.scrollY <= y) current = id;
+        });
+        if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) current = 'contact';
+        Object.keys(spy).forEach(function (id) {
+            var on = id === current;
+            spy[id].classList.toggle('active', on);
+            if (on) spy[id].setAttribute('aria-current', 'true'); else spy[id].removeAttribute('aria-current');
+        });
+    }
+    window.addEventListener('scroll', markActive, { passive: true });
+    window.addEventListener('resize', markActive);
+    markActive();
+
+    /* Reveal on scroll */
+    var items = document.querySelectorAll('.reveal');
+    if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+        }, { threshold: 0.12 });
+        Array.prototype.forEach.call(items, function (el) { io.observe(el); });
+    } else {
+        Array.prototype.forEach.call(items, function (el) { el.classList.add('in'); });
+    }
+
+    /* Feature cards: glow follows the pointer */
+    Array.prototype.forEach.call(document.querySelectorAll('.feature'), function (card) {
+        card.addEventListener('pointermove', function (e) {
+            var r = card.getBoundingClientRect();
+            card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+            card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+        });
+    });
+
+    /* Stock demo */
+    var demo = document.getElementById('demo');
+    var msg = document.getElementById('demoMsg');
+    var STEP = 10;
+    function paint(item) {
+        var q = +item.dataset.qty, low = +item.dataset.low, max = +item.dataset.max;
+        var state = q <= 0 ? 'out' : (q <= low ? 'low' : 'ok');
+        item.classList.remove('low', 'out');
+        if (state !== 'ok') item.classList.add(state);
+        item.querySelector('.val').textContent = q + ' ' + item.dataset.unit;
+        item.querySelector('.tag').textContent = state === 'out' ? 'Out of stock' : (state === 'low' ? 'Low stock' : 'Available');
+        var bar = item.querySelector('.bar');
+        bar.style.setProperty('--w', Math.min(100, q / max * 100) + '%');
+        bar.style.setProperty('--t', (low / max * 100) + '%');
+        item.querySelector('[data-act="sell"]').disabled = q <= 0;
+        item.querySelector('[data-act="recv"]').disabled = q >= max;
+    }
+    var rows = Array.prototype.slice.call(demo.querySelectorAll('.item'));
+    rows.forEach(paint);
+    demo.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-act]');
+        if (!b) return;
+        var item = b.closest('.item'), q = +item.dataset.qty, max = +item.dataset.max;
+        var wasLow = q <= +item.dataset.low;
+        q = b.dataset.act === 'sell' ? Math.max(0, q - STEP) : Math.min(max, q + STEP);
+        item.dataset.qty = q;
+        paint(item);
+        var isLow = q <= +item.dataset.low;
+        msg.textContent = q <= 0 ? item.dataset.name + ' is out of stock.'
+            : (isLow && !wasLow ? item.dataset.name + ' is now low. Time to reorder.'
+            : (!isLow && wasLow ? item.dataset.name + ' is back above its alert level.'
+            : item.dataset.name + ': ' + q + ' ' + item.dataset.unit + ' in stock.'));
+    });
+    document.getElementById('demoReset').addEventListener('click', function () {
+        rows.forEach(function (r) { r.dataset.qty = r.dataset.start; paint(r); });
+        msg.textContent = 'Demo reset. Sample numbers only.';
+    });
+})();
+</script>
 </body>
 </html>
