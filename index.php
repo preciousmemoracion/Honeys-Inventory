@@ -142,18 +142,106 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
         .cta { display: flex; flex-wrap: wrap; gap: .75rem; }
         .cta .btn { min-height: 3.1rem; padding-inline: 1.5rem; font-size: 1rem; }
 
-        .rack { display: grid; gap: 1.4rem; padding: 1.5rem; border: 1px solid var(--line); border-radius: 20px;
+        /* ---------- Product showcase (icons and graphics, right side of the hero) ---------- */
+        .showcase { display: grid; gap: .9rem; min-width: 0; }
+        .stage { position: relative; aspect-ratio: 4 / 4.3; overflow: hidden; border: 1px solid var(--line); border-radius: 24px; touch-action: pan-y;
             background: linear-gradient(145deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .035));
             box-shadow: 0 24px 60px -28px rgba(0, 0, 0, .8), inset 0 1px 0 rgba(255, 255, 255, .08); }
-        .rack h2 { margin: 0; font-size: 1rem; color: var(--muted); font-weight: 600; letter-spacing: .02em; }
-        .rack p { display: flex; justify-content: space-between; gap: 1rem; margin: 0 0 .5rem; font-size: .92rem; color: var(--muted); }
-        .rack p b { color: var(--text); font-weight: 600; }
-        .rack .low p span { color: var(--low); font-weight: 600; }
-        .bar { position: relative; display: block; height: 12px; border-radius: 999px; background: rgba(255, 255, 255, .1); }
-        .bar::before { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--w); border-radius: 999px;
+        .stage:focus-visible { outline: 2px solid var(--cyan-soft); outline-offset: 3px; }
+        .slide { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end;
+            opacity: 0; visibility: hidden; transition: opacity .5s ease, visibility 0s linear .5s; }
+        .slide.active { opacity: 1; visibility: visible; transition: opacity .5s ease; }
+        .art { position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden;
+            background: radial-gradient(circle at 50% 40%, var(--c1), transparent 68%); }
+        .art::before { content: ""; position: absolute; left: 50%; top: 38%; width: 64%; aspect-ratio: 1; transform: translate(-50%, -50%);
+            border-radius: 50%; border: 1px dashed rgba(255, 255, 255, .24); background: radial-gradient(circle, rgba(255, 255, 255, .09), transparent 70%); }
+        .art::after { content: ""; position: absolute; left: 50%; top: 38%; width: 82%; aspect-ratio: 1; transform: translate(-50%, -50%);
+            border-radius: 50%; border: 1px solid rgba(255, 255, 255, .08); }
+        .art > svg { position: relative; width: 78%; height: auto; margin-bottom: 24%; }
+        .fl { position: absolute; display: grid; place-items: center; width: 2.7rem; height: 2.7rem; border: 1px solid var(--line-strong); border-radius: 13px;
+            background: rgba(255, 255, 255, .10); color: var(--cyan-soft); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+        .fl svg { width: 55%; height: 55%; fill: currentColor; }
+        .fl.warm { color: #FFD08A; }
+        .fl.a { left: 11%; top: 13%; }
+        .fl.b { right: 11%; top: 24%; }
+        .fl.c { left: 17%; top: 47%; width: 2.3rem; height: 2.3rem; }
+        /* Photos blend into the page: tinted with the theme colors and faded into the card */
+        .showcase { position: relative; isolation: isolate; }
+        .showcase::before { content: ""; position: absolute; z-index: -1; inset: -6% 0 4% 0; border-radius: 50%; pointer-events: none; filter: blur(26px);
+            background: radial-gradient(closest-side, rgba(124, 107, 255, .38), transparent 72%), radial-gradient(closest-side at 82% 78%, rgba(34, 211, 238, .2), transparent 70%); }
+        .stage { transition: border-color .25s, box-shadow .3s;
+            box-shadow: 0 30px 70px -30px rgba(99, 88, 242, .55), inset 0 1px 0 rgba(255, 255, 255, .08); }
+        .stage:hover { border-color: rgba(190, 182, 255, .4); }
+        .stage::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; transition: opacity .3s;
+            background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 30%), rgba(34, 211, 238, .16), transparent 70%); }
+        @media (hover: hover) { .stage:hover::after { opacity: 1; } }
+
+        .slide.has-photo .art { display: none; }
+        .ph { position: absolute; inset: 0; overflow: hidden; isolation: isolate;
+            -webkit-mask-image: linear-gradient(180deg, #000 52%, transparent 96%); mask-image: linear-gradient(180deg, #000 52%, transparent 96%); }
+        .ph img { display: block; width: 100%; height: 100%; object-fit: cover; filter: saturate(1.08) contrast(1.03); }
+        .ph::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+            background: linear-gradient(135deg, rgba(124, 107, 255, .32), rgba(34, 211, 238, .10) 55%, transparent),
+                        linear-gradient(0deg, rgba(10, 14, 42, .45), transparent 50%); }
+
+        /* White-background product shot: sits on a round plate that matches the theme */
+        .slide.cutout .ph { inset: auto; left: 17%; top: 5%; width: 66%; height: auto; aspect-ratio: 1; border-radius: 50%;
+            -webkit-mask-image: none; mask-image: none;
+            background: radial-gradient(circle at 34% 28%, #FFFFFF 0%, #EEEBFF 62%, #D6D1FF 100%);
+            box-shadow: 0 0 0 12px rgba(255, 255, 255, .05), 0 0 0 13px rgba(190, 182, 255, .25), 0 28px 60px -18px rgba(0, 0, 0, .75), 0 0 70px -10px rgba(124, 107, 255, .6); }
+        .slide.cutout .ph img { object-fit: contain; mix-blend-mode: multiply; transform: scale(1.1); filter: none; }
+        .slide.cutout .ph::after { background: radial-gradient(circle at 78% 86%, rgba(124, 107, 255, .3), transparent 62%); }
+
+        /* Expand button and photo viewer */
+        .ex { position: absolute; top: .75rem; left: .75rem; z-index: 2; display: none; place-items: center; width: 2.3rem; height: 2.3rem;
+            border: 1px solid var(--line-strong); border-radius: 50%; background: rgba(10, 14, 42, .65); color: #fff; cursor: pointer;
+            -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: background .15s, transform .15s; }
+        .ex svg { width: 1.1rem; height: 1.1rem; fill: currentColor; }
+        .ex:hover { background: rgba(124, 107, 255, .8); transform: scale(1.08); }
+        .stage:has(.slide.active.has-photo) .ex { display: grid; }
+        .showcase.lb-open .pg { animation-play-state: paused !important; }
+        dialog.lightbox { width: min(880px, calc(100% - 2rem)); max-height: calc(100dvh - 2rem); margin: auto; padding: 0; overflow: hidden; color: var(--text);
+            border: 1px solid var(--line-strong); border-radius: 22px; background: linear-gradient(145deg, rgba(34, 40, 104, .97), rgba(14, 18, 54, .98));
+            box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .85), inset 0 1px 0 rgba(255, 255, 255, .1); }
+        dialog.lightbox::backdrop { background: rgba(4, 6, 24, .78); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+        .lightbox .x { position: absolute; top: .75rem; right: .75rem; z-index: 2; display: grid; place-items: center; width: 2.4rem; height: 2.4rem;
+            border: 1px solid var(--line-strong); border-radius: 50%; background: rgba(10, 14, 42, .7); color: #fff; cursor: pointer; }
+        .lightbox .x:hover { background: rgba(124, 107, 255, .8); }
+        .lightbox .x svg { fill: currentColor; }
+        .lightbox img { display: block; width: 100%; max-height: calc(100dvh - 10.5rem); object-fit: contain; background: #0A0E2A; }
+        .lb-cap { padding: 1rem 1.4rem 1.3rem; }
+        .lb-cap h3 { margin: 0 0 .2rem; font: 700 1.3rem var(--display); }
+        .lb-cap p { margin: 0; color: var(--muted); }
+        .cap { position: relative; padding: 3.5rem 1.4rem 1.4rem; background: linear-gradient(0deg, rgba(8, 11, 36, .95), rgba(8, 11, 36, .65) 60%, transparent); }
+        .cap .chip { display: inline-block; margin-bottom: .5rem; padding: .15rem .65rem; border-radius: 999px; background: var(--ok-bg); color: #9DF3E9;
+            font-size: .8rem; font-weight: 600; }
+        .cap h3 { margin: 0 0 .25rem; font: 700 clamp(1.3rem, 2.4vw, 1.7rem) var(--display); letter-spacing: -.01em; }
+        .cap p { margin: 0; color: var(--muted); font-size: .95rem; line-height: 1.45; }
+
+        .nv { position: absolute; top: 42%; z-index: 2; display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border: 1px solid var(--line-strong);
+            border-radius: 50%; background: rgba(10, 14, 42, .65); color: #fff; cursor: pointer; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+            transition: background .15s, transform .15s; }
+        .nv svg { fill: currentColor; }
+        .nv:hover { background: rgba(124, 107, 255, .8); transform: scale(1.08); }
+        .nv.prev { left: .75rem; }
+        .nv.next { right: .75rem; }
+        .pp { position: absolute; top: .75rem; right: .75rem; z-index: 2; padding: .3rem .7rem; border: 1px solid var(--line-strong); border-radius: 999px;
+            background: rgba(10, 14, 42, .65); color: var(--cyan-soft); font: 600 .8rem var(--body); cursor: pointer; }
+        .pp:hover { background: rgba(255, 255, 255, .14); }
+
+        .thumbs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .6rem; }
+        .thumb { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .15rem;
+            min-height: 3.6rem; padding: .5rem .4rem .6rem; border: 1px solid var(--line); border-radius: 12px;
+            background: rgba(255, 255, 255, .05); color: var(--muted); font: 600 .85rem var(--body); cursor: pointer;
+            transition: background .15s, color .15s, border-color .15s; }
+        .thumb svg { width: 1.3rem; height: 1.3rem; fill: currentColor; }
+        .thumb:hover { background: rgba(255, 255, 255, .1); color: var(--text); }
+        .thumb.active { color: #fff; border-color: rgba(190, 182, 255, .55); background: rgba(124, 107, 255, .22); }
+        .thumb .pg { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; transform: scaleX(0); transform-origin: left;
             background: linear-gradient(90deg, var(--cyan), var(--violet)); }
-        .rack .low .bar::before { background: linear-gradient(90deg, #FFB085, var(--out)); }
-        .bar i { position: absolute; z-index: 1; top: -5px; bottom: -5px; left: 33%; width: 2px; border-radius: 1px; background: rgba(255, 255, 255, .85); }
+        .thumb.active .pg { transform: scaleX(1); }
+        .showcase.paused .pg { animation-play-state: paused !important; }
+        @media (hover: hover) { .showcase:hover .pg { animation-play-state: paused; } }
 
         /* ---------- Features ---------- */
         .section-head { margin: 0 0 1.75rem; }
@@ -219,25 +307,48 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
         .signin .field input:focus-visible { outline: none; }
 
         @media (prefers-reduced-motion: no-preference) {
-            .bar::before { animation: fill 1.2s cubic-bezier(.2, .7, .2, 1) both; animation-delay: var(--d, 0s); }
             .msg.error { animation: nudge .35s ease-out; }
             dialog.signin[open] { animation: pop .22s ease-out; }
-            @keyframes fill  { from { width: 0; } }
+            .thumb.active .pg { transform: scaleX(0); animation: prog 5s linear forwards; }
+            .slide.active .art > svg { animation: bob 4.5s ease-in-out infinite; }
+            .slide.active .fl { animation: drift 5s ease-in-out infinite; }
+            .slide.active .fl.b { animation-delay: -1.7s; }
+            .slide.active .fl.c { animation-delay: -3.2s; }
+            .slide.has-photo.active .ph img { animation: kb 9s ease-out both; }
+            .slide.cutout.has-photo.active .ph img { animation: none; }
+            .slide.has-photo .ph { transform: translate3d(calc(var(--px, 0) * -10px), calc(var(--py, 0) * -8px), 0) scale(1.07); transition: transform .3s ease-out; }
+            .slide.cutout.has-photo .ph { transform: translate3d(calc(var(--px, 0) * 9px), calc(var(--py, 0) * 7px), 0); }
+            dialog.lightbox[open] { animation: pop .22s ease-out; }
             @keyframes nudge { 25% { transform: translateX(-5px); } 55% { transform: translateX(4px); } 80% { transform: translateX(-2px); } }
             @keyframes pop   { from { opacity: 0; transform: translateY(10px) scale(.98); } }
+            @keyframes prog  { to { transform: scaleX(1); } }
+            @keyframes bob   { 50% { transform: translateY(-8px) rotate(-1deg); } }
+            @keyframes drift { 50% { transform: translateY(-9px); } }
+            @keyframes kb    { from { transform: scale(1.08); } to { transform: scale(1); } }
         }
 
         @media (max-width: 900px) {
             .hero { grid-template-columns: minmax(0, 1fr); }
             .features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .stage { aspect-ratio: 4 / 4.2; }
+            .showcase { width: 100%; max-width: 540px; margin-inline: auto; }
+            .slide.cutout .ph { left: 20%; width: 60%; }
         }
         @media (max-width: 560px) {
             .features { grid-template-columns: minmax(0, 1fr); }
             .brand small { display: none; }
             dialog.signin { padding: 1.8rem 1.25rem 1.5rem; }
         }
+        @media (max-width: 430px) {
+            .stage { aspect-ratio: 1 / 1.12; }
+            .slide.cutout .ph { left: 18%; width: 64%; }
+            .nv { width: 2.3rem; height: 2.3rem; }
+            .fl { width: 2.3rem; height: 2.3rem; }
+            .fl.c { display: none; }
+            .thumb { font-size: .78rem; min-height: 3.3rem; }
+        }
 
-        /* ---------- Enhancements: nav, demo, reveal, contact ---------- */
+        /* ---------- Enhancements: nav, reveal, contact ---------- */
         html { scroll-padding-top: 5rem; }
         section[id] { scroll-margin-top: 4.5rem; }
         .lp-nav { transition: box-shadow .2s, background .2s; }
@@ -262,26 +373,6 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
         .hero { position: relative; }
         .hero .meta { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin: 1.75rem 0 0; padding: 0; list-style: none; color: var(--muted); font-size: .92rem; }
         .hero .meta li::before { content: "\2713"; margin-right: .45rem; color: var(--ok); font-weight: 700; }
-
-        .demo-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-        .demo-head button { border: 1px solid var(--line-strong); border-radius: 8px; background: transparent; color: var(--cyan-soft);
-            font: 600 .82rem var(--body); padding: .3rem .65rem; cursor: pointer; }
-        .demo-head button:hover { background: rgba(255, 255, 255, .1); }
-        .demo .tag { padding: .1rem .55rem; border-radius: 999px; background: var(--ok-bg); color: #9DF3E9; font-size: .78rem; font-weight: 600; }
-        .demo .low .tag { background: var(--low-bg); color: var(--low); }
-        .demo .out .tag { background: var(--out-bg); color: var(--out-text); }
-        .demo .item p span { display: inline-flex; align-items: center; gap: .55rem; }
-        .demo .bar::before { width: var(--w); transition: width .35s cubic-bezier(.2, .7, .2, 1); animation-fill-mode: backwards; }
-        .demo .bar i { left: var(--t, 33%); }
-        .demo .out .bar::before { background: linear-gradient(90deg, #FFB085, var(--out)); }
-        .demo .ctl { display: flex; gap: .5rem; margin-top: .75rem; }
-        .demo .ctl button { flex: 1; min-height: 2.2rem; border: 1px solid var(--line-strong); border-radius: 10px; background: rgba(255, 255, 255, .06);
-            color: var(--text); font: 600 .85rem var(--body); cursor: pointer; transition: background .15s, transform .1s; }
-        .demo .ctl button:hover { background: rgba(255, 255, 255, .14); }
-        .demo .ctl button:active { transform: scale(.97); }
-        .demo .ctl button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
-        .demo em { font-style: normal; }
-        .demo-note { margin: 0; color: var(--muted); font-size: .82rem; }
 
         .feature { position: relative; overflow: hidden; transition: transform .2s, border-color .2s; }
         .feature::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .25s;
@@ -395,29 +486,75 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
             </ul>
         </div>
 
-        <div class="rack demo reveal" id="demo" style="--rd: .12s" aria-label="Interactive stock demo">
-            <div class="demo-head">
-                <h2>Try it: live stock demo</h2>
-                <button type="button" id="demoReset">Reset</button>
+        <!-- Product showcase. Photos go in an "images" folder next to index.php:
+             whole-chicken.jpeg, chicken-cuts.jpg, hotdog.jpg, frozen-food.jpg
+             A photo covers its slide automatically. If a file is missing, the drawn graphic shows instead. -->
+        <div class="showcase reveal" id="showcase" style="--rd: .12s" role="region" aria-roledescription="carousel" aria-label="Honey's products">
+            <div class="stage" id="stage" tabindex="0">
+
+                <!-- 1. Whole dressed chicken -->
+                <article class="slide active cutout" style="--c1: rgba(255, 176, 90, .5)" aria-label="Whole dressed chicken">
+                    <div class="art" aria-hidden="true">
+                        <svg viewBox="0 0 400 300">
+                            <ellipse cx="200" cy="262" rx="150" ry="20" fill="#000" opacity=".25"/>
+                            <path d="M125 222 L88 252 a13 13 0 1 0 20 15 L158 238Z" fill="#E9A85C"/>
+                            <path d="M275 222 L312 252 a13 13 0 1 1 -20 15 L242 238Z" fill="#E9A85C"/>
+                            <path d="M105 170C105 108 155 78 208 82c62 5 92 46 87 98-5 48-55 68-105 63-50-5-85-26-85-73z" fill="#F7C98B"/>
+                            <ellipse cx="200" cy="150" rx="64" ry="42" fill="#FBDDAE"/>
+                            <path d="M120 150c-30 5-48 28-38 48 20-2 40-14 50-32z" fill="#EDB264"/>
+                            <path d="M280 150c30 5 48 28 38 48-20-2-40-14-50-32z" fill="#EDB264"/>
+                        </svg>
+                        <span class="fl warm a"><svg viewBox="0 0 24 24"><path d="M12 2l2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2z"/></svg></span>
+                        <span class="fl b"><svg viewBox="0 0 24 24"><path d="M11 2h2v3.1a7 7 0 0 1 0 13.8V22h-2v-3.1A7 7 0 0 1 11 5.1V2zm1 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/></svg></span>
+                    </div>
+                    <div class="ph"><img src="images/img/whole-chicken.jpeg" alt="Whole dressed chicken" decoding="async" onload="this.closest('.slide').classList.add('has-photo')" onerror="this.parentNode.remove()"></div>
+                    <div class="cap"><span class="chip">Fresh daily</span><h3>Whole dressed chicken</h3><p>Cleaned, dressed and ready for the pot or the grill.</p></div>
+                </article>
+
+                <!-- 3. Hotdogs -->
+                <article class="slide" style="--c1: rgba(255, 90, 110, .4)" aria-label="Hotdogs and sausages">
+                    <div class="art" aria-hidden="true">
+                        <svg viewBox="0 0 400 300">
+                            <ellipse cx="200" cy="250" rx="150" ry="18" fill="#000" opacity=".25"/>
+                            <rect x="60" y="120" width="280" height="62" rx="31" fill="#EDB05E"/>
+                            <rect x="48" y="108" width="304" height="48" rx="24" fill="#D9473F"/>
+                            <path d="M80 122q20-14 40 0t40 0 40 0 40 0 40 0" stroke="#FFD84D" stroke-width="7" fill="none" stroke-linecap="round"/>
+                            <rect x="60" y="140" width="280" height="60" rx="30" fill="#F6C77E"/>
+                            <rect x="70" y="150" width="260" height="10" rx="5" fill="#fff" opacity=".25"/>
+                        </svg>
+                        <span class="fl a"><svg viewBox="0 0 24 24"><path d="M11 2h2v7.6l5.9-3.4 1 1.7L14 11.3l5.9 3.4-1 1.7-5.9-3.4V22h-2v-9.6l-5.9 3.4-1-1.7L10 11.3 4.1 7.9l1-1.7L11 9.6V2z"/></svg></span>
+                        <span class="fl warm b"><svg viewBox="0 0 24 24"><path d="M12 2l2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2z"/></svg></span>
+                    </div>
+                    <div class="ph"><img src="images/img/hotdog.jpg" alt="Frozen hotdogs and sausages" decoding="async" onload="this.closest('.slide').classList.add('has-photo')" onerror="this.parentNode.remove()"></div>
+                    <div class="cap"><span class="chip">Frozen</span><h3>Hotdogs and sausages</h3><p>Packs for the kids' snack and the weekend barbecue.</p></div>
+                </article>
+
+                <!-- 4. Frozen favorites -->
+                <article class="slide" style="--c1: rgba(34, 211, 238, .4)" aria-label="Frozen favorites">
+                    <div class="art" aria-hidden="true">
+                        <svg viewBox="0 0 400 300">
+                            <ellipse cx="200" cy="262" rx="140" ry="18" fill="#000" opacity=".25"/>
+                            <rect x="125" y="40" width="150" height="205" rx="16" fill="#22D3EE" fill-opacity=".22" stroke="#9EEBFA" stroke-width="3"/>
+                            <rect x="125" y="40" width="150" height="26" rx="10" fill="#9EEBFA" fill-opacity=".5"/>
+                            <g stroke="#E6FBFF" stroke-width="5" stroke-linecap="round" transform="translate(200 120)"><path d="M0-34V34"/><path d="M-30-17L30 17"/><path d="M-30 17L30-17"/></g>
+                            <path d="M170 215c-18-4-24-26-8-36 14-9 36-2 38 14 2 16-14 28-30 22z" fill="#EBB24E"/>
+                            <path d="M225 222c-16-2-24-20-12-32 12-11 32-6 36 8 4 15-10 28-24 24z" fill="#F2C161"/>
+                        </svg>
+                        <span class="fl a"><svg viewBox="0 0 24 24"><path d="M11 2h2v7.6l5.9-3.4 1 1.7L14 11.3l5.9 3.4-1 1.7-5.9-3.4V22h-2v-9.6l-5.9 3.4-1-1.7L10 11.3 4.1 7.9l1-1.7L11 9.6V2z"/></svg></span>
+                        <span class="fl b"><svg viewBox="0 0 24 24"><path d="M15 13V5a3 3 0 0 0-6 0v8a5 5 0 1 0 6 0zm-3-9a1 1 0 0 1 1 1v3h-2V5a1 1 0 0 1 1-1z"/></svg></span>
+                        <span class="fl c"><svg viewBox="0 0 24 24"><path d="M11 2h2v7.6l5.9-3.4 1 1.7L14 11.3l5.9 3.4-1 1.7-5.9-3.4V22h-2v-9.6l-5.9 3.4-1-1.7L10 11.3 4.1 7.9l1-1.7L11 9.6V2z"/></svg></span>
+                    </div>
+                    <div class="ph"><img src="images/img/frozen-food.jpg" alt="Packs of frozen ham, tocino and sausages" decoding="async" onload="this.closest('.slide').classList.add('has-photo')" onerror="this.parentNode.remove()"></div>
+                    <div class="cap"><span class="chip">Keep frozen</span><h3>Frozen favorites</h3><p>Ham, tocino and other ready-to-cook packs, kept cold until you take them home.</p></div>
+                </article>
+
+                <button class="nv prev" type="button" id="ssPrev" aria-label="Previous"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
+                <button class="nv next" type="button" id="ssNext" aria-label="Next"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></button>
+                <button class="pp" type="button" id="ssPause" aria-pressed="false">Pause</button>
+                <button class="ex" type="button" id="ssExpand" aria-label="View larger photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
             </div>
 
-            <div class="item" data-name="Whole dressed chicken" data-qty="84" data-start="84" data-low="25" data-max="100" data-unit="kg">
-                <p><b>Whole dressed chicken</b><span><em class="val"></em><em class="tag"></em></span></p>
-                <span class="bar"><i></i></span>
-                <div class="ctl"><button type="button" data-act="sell">Sell 10</button><button type="button" data-act="recv">Receive 10</button></div>
-            </div>
-            <div class="item" data-name="Chicken wings" data-qty="58" data-start="58" data-low="20" data-max="100" data-unit="kg">
-                <p><b>Chicken wings</b><span><em class="val"></em><em class="tag"></em></span></p>
-                <span class="bar"><i></i></span>
-                <div class="ctl"><button type="button" data-act="sell">Sell 10</button><button type="button" data-act="recv">Receive 10</button></div>
-            </div>
-            <div class="item" data-name="Frozen hotdog" data-qty="20" data-start="20" data-low="20" data-max="100" data-unit="packs">
-                <p><b>Frozen hotdog</b><span><em class="val"></em><em class="tag"></em></span></p>
-                <span class="bar"><i></i></span>
-                <div class="ctl"><button type="button" data-act="sell">Sell 10</button><button type="button" data-act="recv">Receive 10</button></div>
-            </div>
-
-            <p class="demo-note" id="demoMsg" role="status" aria-live="polite">Sample numbers only. The white tick marks where low stock starts.</p>
+          
         </div>
     </section>
 
@@ -534,6 +671,14 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
 <button class="to-top" id="toTop" type="button" aria-label="Back to top">
     <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.41 15.41 12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
 </button>
+
+<dialog class="lightbox" id="lightbox" aria-label="Product photo">
+    <button class="x" type="button" data-close-lb aria-label="Close photo">
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+    </button>
+    <img src="" alt="">
+    <div class="lb-cap"><h3></h3><p></p></div>
+</dialog>
 
 <?php if (!$loggedIn): ?>
 <dialog class="signin" id="loginModal" aria-labelledby="loginTitle">
@@ -701,43 +846,91 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
         });
     });
 
-    /* Stock demo */
-    var demo = document.getElementById('demo');
-    var msg = document.getElementById('demoMsg');
-    var STEP = 10;
-    function paint(item) {
-        var q = +item.dataset.qty, low = +item.dataset.low, max = +item.dataset.max;
-        var state = q <= 0 ? 'out' : (q <= low ? 'low' : 'ok');
-        item.classList.remove('low', 'out');
-        if (state !== 'ok') item.classList.add(state);
-        item.querySelector('.val').textContent = q + ' ' + item.dataset.unit;
-        item.querySelector('.tag').textContent = state === 'out' ? 'Out of stock' : (state === 'low' ? 'Low stock' : 'Available');
-        var bar = item.querySelector('.bar');
-        bar.style.setProperty('--w', Math.min(100, q / max * 100) + '%');
-        bar.style.setProperty('--t', (low / max * 100) + '%');
-        item.querySelector('[data-act="sell"]').disabled = q <= 0;
-        item.querySelector('[data-act="recv"]').disabled = q >= max;
+    /* Product showcase */
+    var box = document.getElementById('showcase');
+    if (box) {
+        var slides = Array.prototype.slice.call(box.querySelectorAll('.slide'));
+        var thumbs = Array.prototype.slice.call(box.querySelectorAll('.thumb'));
+        var stage = document.getElementById('stage');
+        var pause = document.getElementById('ssPause');
+        var cur = 0;
+
+        function go(n) {
+            cur = (n + slides.length) % slides.length;
+            slides.forEach(function (s, k) {
+                s.classList.toggle('active', k === cur);
+                s.setAttribute('aria-hidden', k === cur ? 'false' : 'true');
+            });
+            thumbs.forEach(function (t, k) {
+                t.classList.toggle('active', k === cur);
+                if (k === cur) t.setAttribute('aria-current', 'true'); else t.removeAttribute('aria-current');
+            });
+        }
+        thumbs.forEach(function (t, k) { t.addEventListener('click', function () { go(k); }); });
+        document.getElementById('ssPrev').addEventListener('click', function () { go(cur - 1); });
+        document.getElementById('ssNext').addEventListener('click', function () { go(cur + 1); });
+
+        // The progress bar on the active tab drives autoplay: when it finishes, go to the next slide.
+        box.addEventListener('animationend', function (e) {
+            if (e.target.classList && e.target.classList.contains('pg')) go(cur + 1);
+        });
+
+        pause.addEventListener('click', function () {
+            var p = box.classList.toggle('paused');
+            pause.textContent = p ? 'Play' : 'Pause';
+            pause.setAttribute('aria-pressed', p ? 'true' : 'false');
+        });
+
+        stage.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowLeft') go(cur - 1);
+            if (e.key === 'ArrowRight') go(cur + 1);
+        });
+
+        var sx = null;
+        stage.addEventListener('pointerdown', function (e) { sx = e.clientX; });
+        stage.addEventListener('pointerup', function (e) {
+            if (sx === null) return;
+            var dx = e.clientX - sx; sx = null;
+            if (Math.abs(dx) > 40) go(dx < 0 ? cur + 1 : cur - 1);
+        });
+        stage.addEventListener('pointercancel', function () { sx = null; });
+
+        /* Pointer parallax and light (mouse only) */
+        stage.addEventListener('pointermove', function (e) {
+            if (e.pointerType !== 'mouse') return;
+            var r = stage.getBoundingClientRect();
+            stage.style.setProperty('--px', ((e.clientX - r.left) / r.width * 2 - 1).toFixed(3));
+            stage.style.setProperty('--py', ((e.clientY - r.top) / r.height * 2 - 1).toFixed(3));
+            stage.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+            stage.style.setProperty('--my', (e.clientY - r.top) + 'px');
+        });
+        stage.addEventListener('pointerleave', function () {
+            stage.style.setProperty('--px', 0);
+            stage.style.setProperty('--py', 0);
+        });
+
+        /* Larger photo viewer */
+        var lb = document.getElementById('lightbox');
+        var ex = document.getElementById('ssExpand');
+        if (lb && ex && typeof lb.showModal === 'function') {
+            ex.addEventListener('click', function () {
+                var s = slides[cur], im = s.querySelector('.ph img');
+                if (!im) return;
+                var li = lb.querySelector('img');
+                li.src = im.currentSrc || im.src;
+                li.alt = im.alt;
+                lb.querySelector('h3').textContent = s.querySelector('.cap h3').textContent;
+                lb.querySelector('p').textContent = s.querySelector('.cap p').textContent;
+                box.classList.add('lb-open');
+                lb.showModal();
+            });
+            lb.querySelector('[data-close-lb]').addEventListener('click', function () { lb.close(); });
+            lb.addEventListener('mousedown', function (e) { if (e.target === lb) lb.close(); });
+            lb.addEventListener('close', function () { box.classList.remove('lb-open'); });
+        }
+
+        go(0);
     }
-    var rows = Array.prototype.slice.call(demo.querySelectorAll('.item'));
-    rows.forEach(paint);
-    demo.addEventListener('click', function (e) {
-        var b = e.target.closest('button[data-act]');
-        if (!b) return;
-        var item = b.closest('.item'), q = +item.dataset.qty, max = +item.dataset.max;
-        var wasLow = q <= +item.dataset.low;
-        q = b.dataset.act === 'sell' ? Math.max(0, q - STEP) : Math.min(max, q + STEP);
-        item.dataset.qty = q;
-        paint(item);
-        var isLow = q <= +item.dataset.low;
-        msg.textContent = q <= 0 ? item.dataset.name + ' is out of stock.'
-            : (isLow && !wasLow ? item.dataset.name + ' is now low. Time to reorder.'
-            : (!isLow && wasLow ? item.dataset.name + ' is back above its alert level.'
-            : item.dataset.name + ': ' + q + ' ' + item.dataset.unit + ' in stock.'));
-    });
-    document.getElementById('demoReset').addEventListener('click', function () {
-        rows.forEach(function (r) { r.dataset.qty = r.dataset.start; paint(r); });
-        msg.textContent = 'Demo reset. Sample numbers only.';
-    });
 })();
 </script>
 </body>
