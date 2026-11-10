@@ -3,6 +3,7 @@ require_once "auth.php";
 require_login();
 
 require_once "helpers.php";
+require_once "product_image.php";
 
 date_default_timezone_set('Asia/Manila');
 
@@ -10,7 +11,7 @@ $error    = null;
 $rows     = [];
 $products = [];
 $sum      = ['rin' => 0, 'rout' => 0, 'n' => 0];
-$stats    = ['low' => 0];
+$stats    = ['low' => 0];   // read by nav.php for the low-stock badge
 
 $type   = in_array($_GET['type'] ?? '', ['in', 'out'], true) ? $_GET['type'] : 'all';
 $pid    = (int)filter_var($_GET['product'] ?? 0, FILTER_VALIDATE_INT);
@@ -35,8 +36,9 @@ try {
     if ($type === 'out') { $where[] = "t.transaction_type LIKE '%out'"; }
     if ($pid > 0)        { $where[] = 't.product_id = ?'; $types .= 'i'; $params[] = $pid; }
     if ($dateCol) {
-        if ($from !== '') { $where[] = "DATE(t.`$dateCol`) >= ?"; $types .= 's'; $params[] = $from; }
-        if ($to !== '')   { $where[] = "DATE(t.`$dateCol`) <= ?"; $types .= 's'; $params[] = $to; }
+        // Range comparisons (not DATE(col)) so an index on the date column can be used
+        if ($from !== '') { $where[] = "t.`$dateCol` >= ?"; $types .= 's'; $params[] = $from; }
+        if ($to !== '')   { $where[] = "t.`$dateCol` < ?";  $types .= 's'; $params[] = date('Y-m-d', strtotime($to . ' +1 day')); }
     }
     $w    = $where ? 'WHERE ' . implode(' AND ', $where) : '';
     $when = $dateCol ? ", t.`$dateCol` AS moved_at" : '';
@@ -49,8 +51,9 @@ try {
         $types, $params
     )[0];
 
+    // p.image added so each row can show the product photo
     $rows = db_all($conn,
-        "SELECT t.id, t.transaction_type, t.quantity, t.remarks, t.product_id, p.product_name$when
+        "SELECT t.id, t.transaction_type, t.quantity, t.remarks, t.product_id, p.product_name, p.image$when
          FROM stock_transactions t LEFT JOIN products p ON p.id = t.product_id
          $w ORDER BY t.id DESC LIMIT 300",
         $types, $params
@@ -76,6 +79,29 @@ $exportQuery = http_build_query(array_filter([
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,600..800&family=Figtree:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="theme.css">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <style>
+        /* Product photo + name in the Product column */
+        .pd { display: flex; align-items: center; gap: .85rem; min-width: 0; }
+        .pd > a, .pd > span:last-child { min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+        .pd .thumb { flex: none; width: 3.5rem; height: 3.5rem; border-radius: 12px; overflow: hidden; font-size: 1.25rem; }
+        .pd .thumb:not(.has-img) { display: grid; place-items: center; font-weight: 700; color: #fff; background: hsl(var(--h, 230) 50% 32%); }
+        .thumb.has-img { padding: 0; background: #141A4A; box-shadow: 0 0 0 1px rgba(190, 182, 255, .3), 0 8px 20px -10px rgba(0, 0, 0, .7); }
+        .thumb img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; transition: transform .25s ease; }
+        .thumb a.zoom { display: block; width: 100%; height: 100%; border-radius: inherit; cursor: zoom-in; }
+        .thumb a.zoom:hover img { transform: scale(1.08); }
+        .thumb a.zoom:focus-visible { outline: 2px solid var(--cyan-soft, #67e8f9); outline-offset: 2px; }
+        .pd a:hover { text-decoration: underline; }
+        @media (prefers-reduced-motion: reduce) { .thumb img { transition: none; } }
+        @media print { .thumb { box-shadow: none; } .thumb a.zoom { pointer-events: none; } }
+
+        /* Click-to-enlarge photo viewer */
+        dialog.viewer { width: min(820px, calc(100% - 2rem)); padding: 0; border: 1px solid var(--line-strong, #4a4f8a); border-radius: 18px; overflow: hidden; background: #0E1236; color: var(--text, #fff); }
+        dialog.viewer::backdrop { background: rgba(4, 6, 24, .78); }
+        dialog.viewer img { display: block; width: 100%; max-height: 78dvh; object-fit: contain; background: #fff; }
+        dialog.viewer p { margin: 0; padding: .85rem 1.1rem; font-weight: 600; }
+        dialog.viewer button { position: absolute; top: .6rem; right: .6rem; width: 2.4rem; height: 2.4rem; border: 0; border-radius: 50%; background: rgba(10, 14, 42, .85); color: #fff; font-size: 1.3rem; cursor: pointer; }
+        dialog.viewer button:focus-visible { outline: 2px solid var(--cyan-soft, #67e8f9); outline-offset: 2px; }
+    </style>
 </head>
 <body>
 
@@ -180,11 +206,19 @@ $exportQuery = http_build_query(array_filter([
                         <?php if ($dateCol): ?>
                             <td class="muted" style="font-weight: 400"><?= $ts ? e(date('M j, Y g:i A', $ts)) : '' ?></td>
                         <?php endif; ?>
-                        <td class="keep"><?php if ($r['product_name'] !== null): ?>
-                                <a href="edit_product.php?id=<?= (int)$r['product_id'] ?>" style="color: inherit"><?= e($r['product_name']) ?></a>
+                        <td class="keep">
+                            <?php if ($r['product_name'] !== null): ?>
+                                <span class="pd">
+                                    <?= product_thumb($r) ?>
+                                    <a href="edit_product.php?id=<?= (int)$r['product_id'] ?>" style="color: inherit"><?= e($r['product_name']) ?></a>
+                                </span>
                             <?php else: ?>
-                                <span style="color: var(--muted)">(deleted product)</span>
-                            <?php endif; ?></td>
+                                <span class="pd">
+                                    <?= product_thumb(['product_name' => 'Deleted product', 'image' => null], false) ?>
+                                    <span style="color: var(--muted)">(deleted product)</span>
+                                </span>
+                            <?php endif; ?>
+                        </td>
                         <td><span class="badge <?= $in ? 'in' : 'outt' ?>"><?= $in ? 'Stock in' : 'Stock out' ?></span></td>
                         <td class="num <?= $in ? 'qty-in' : 'qty-out' ?>"><?= $in ? '+' : '-' ?><?= number_format((int)$r['quantity']) ?></td>
                         <td class="muted" style="font-weight: 400"><?= move_note_html($r['remarks']) ?></td>
@@ -201,6 +235,40 @@ $exportQuery = http_build_query(array_filter([
     </section>
 </div>
 </main>
+
+<dialog class="viewer" id="viewer" aria-label="Product photo">
+    <button type="button" id="viewerClose" aria-label="Close photo">&times;</button>
+    <img id="viewerImg" alt="">
+    <p id="viewerCap"></p>
+</dialog>
+
+<script>
+(function () {
+    /* Click a product photo to see it larger */
+    var viewer = document.getElementById('viewer');
+    if (!viewer || !viewer.showModal) return;
+    var img = document.getElementById('viewerImg');
+    var cap = document.getElementById('viewerCap');
+    var lastLink = null;
+
+    document.querySelectorAll('a.zoom').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+            e.preventDefault();
+            lastLink = a;
+            img.src = a.href;
+            img.alt = a.dataset.zoom || '';
+            cap.textContent = a.dataset.zoom || '';
+            viewer.showModal();
+        });
+    });
+    document.getElementById('viewerClose').addEventListener('click', function () { viewer.close(); });
+    viewer.addEventListener('click', function (e) { if (e.target === viewer) viewer.close(); });
+    viewer.addEventListener('close', function () {
+        img.removeAttribute('src');
+        if (lastLink) lastLink.focus();
+    });
+})();
+</script>
 <script src="app.js" defer></script>
 </body>
 </html>

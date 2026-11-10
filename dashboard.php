@@ -3,6 +3,7 @@ require_once "auth.php";
 require_login();
 
 require_once "db.php";
+require_once "product_image.php";
 
 date_default_timezone_set('Asia/Manila');
 
@@ -15,6 +16,36 @@ if (!function_exists('e')) {
 if (!function_exists('peso')) {
     function peso($amount): string {
         return '₱' . number_format((float)$amount, 2);
+    }
+}
+
+/* Product picture (click to enlarge), or a colored tile with the first letter when there is no photo */
+if (!function_exists('product_thumb')) {
+    function product_thumb(array $p): string {
+        $name = (string)$p['product_name'];
+        $hue  = crc32(strtolower($name)) % 360;
+        $url  = product_image_url($p['image'] ?? null);
+        if ($url === '') {
+            $ltr = function_exists('mb_substr') ? mb_strtoupper(mb_substr($name, 0, 1)) : strtoupper(substr($name, 0, 1));
+            return '<span class="thumb" style="--h: ' . $hue . '" aria-hidden="true">' . e($ltr) . '</span>';
+        }
+        return '<span class="thumb has-img" style="--h: ' . $hue . '"><a class="zoom" href="' . e($url) . '" data-zoom="' . e($name)
+             . '" aria-label="View photo of ' . e($name) . '"><img src="' . e($url) . '" alt="" loading="lazy" width="88" height="88"></a></span>';
+    }
+}
+
+/* Small line icons for the cards and lists */
+if (!function_exists('dash_icon')) {
+    function dash_icon(string $name): string {
+        $paths = [
+            'box'     => '<path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/>',
+            'layers'  => '<path d="M12 3 3 8l9 5 9-5z"/><path d="m3 13 9 5 9-5"/>',
+            'alert'   => '<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17.5v.01"/>',
+            'cash'    => '<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M7 9.5v.01M17 14.5v.01"/>',
+            'receipt' => '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
+        ];
+        return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+             . ($paths[$name] ?? '') . '</svg>';
     }
 }
 
@@ -33,7 +64,14 @@ function fetchAll(mysqli $conn, string $sql, string $types = '', array $params =
     return $rows;
 }
 
-$error = null;
+$error     = null;
+$todayStr  = date('Y-m-d');
+$tomorrow  = date('Y-m-d', strtotime('+1 day'));
+$yesterday = date('Y-m-d', strtotime('-1 day'));
+$weekStart = date('Y-m-d', strtotime('-6 days'));
+$monthStart = date('Y-m-01');
+$hour      = (int)date('G');
+$greeting  = $hour < 12 ? 'Good morning' : ($hour < 18 ? 'Good afternoon' : 'Good evening');
 
 try {
     // One query for all three summary cards
@@ -45,16 +83,22 @@ try {
          FROM products"
     )[0];
 
-    // Today's sales (date comes from PHP so it follows the Manila timezone)
+    // Today's sales. Range comparisons (not DATE(col)) so an index on sale_date can be used.
     $today = fetchAll($conn,
         "SELECT COUNT(*) AS count, COALESCE(SUM(total_amount), 0) AS total
-         FROM sales WHERE DATE(sale_date) = ?",
-        's', [date('Y-m-d')]
+         FROM sales WHERE sale_date >= ? AND sale_date < ?",
+        'ss', [$todayStr, $tomorrow]
     )[0];
+
+    // Yesterday, for the "vs yesterday" note on the sales card
+    $yesterdayTotal = (float)fetchAll($conn,
+        "SELECT COALESCE(SUM(total_amount), 0) AS t FROM sales WHERE sale_date >= ? AND sale_date < ?",
+        'ss', [$yesterday, $todayStr]
+    )[0]['t'];
 
     // Products needing restock, most urgent first
     $restock = fetchAll($conn,
-        "SELECT product_name, quantity, low_stock_level, unit
+        "SELECT product_name, image, quantity, low_stock_level, unit
          FROM products
          WHERE quantity <= low_stock_level
          ORDER BY quantity ASC, product_name
@@ -63,7 +107,7 @@ try {
 
     // Inventory: low-stock items float to the top
     $products = fetchAll($conn,
-        "SELECT product_name, category, quantity, low_stock_level, unit, price
+        "SELECT product_name, image, category, quantity, low_stock_level, unit, price
          FROM products
          ORDER BY (quantity <= low_stock_level) DESC, product_name
          LIMIT 10"
@@ -78,8 +122,8 @@ try {
     $byDay = [];
     foreach (fetchAll($conn,
         "SELECT DATE(sale_date) AS d, SUM(total_amount) AS t, COUNT(*) AS n
-         FROM sales WHERE DATE(sale_date) >= ? GROUP BY DATE(sale_date)",
-        's', [date('Y-m-d', strtotime('-6 days'))]
+         FROM sales WHERE sale_date >= ? AND sale_date < ? GROUP BY DATE(sale_date)",
+        'ss', [$weekStart, $tomorrow]
     ) as $r) {
         $byDay[$r['d']] = $r;
     }
@@ -95,16 +139,24 @@ try {
     $top = fetchAll($conn,
         "SELECT si.product_name, SUM(si.quantity) AS qty, SUM(si.subtotal) AS revenue
          FROM sale_items si JOIN sales s ON s.id = si.sale_id
-         WHERE DATE(s.sale_date) >= ?
+         WHERE s.sale_date >= ?
          GROUP BY si.product_name ORDER BY qty DESC LIMIT 5",
-        's', [date('Y-m-01')]
+        's', [$monthStart]
     );
 } catch (Throwable $ex) {
     error_log('Dashboard error: ' . $ex->getMessage());
     $error = "The dashboard couldn't load its data. Check the database connection and try again.";
-    $stats = ['products' => 0, 'stock' => 0, 'low' => 0];
+    $stats = ['products' => 0, 'stock' => 0, 'low' => 0, 'out_count' => 0];
     $today = ['count' => 0, 'total' => 0];
+    $yesterdayTotal = 0.0;
     $restock = $products = $sales = $week = $top = [];
+}
+
+/* "Up 12% vs yesterday" for the sales card */
+$trend = null;
+if (!$error && $yesterdayTotal > 0) {
+    $chg   = ((float)$today['total'] - $yesterdayTotal) / $yesterdayTotal * 100;
+    $trend = ['up' => $chg >= 0, 'text' => ($chg >= 0 ? 'Up ' : 'Down ') . number_format(abs($chg), 0) . '% vs yesterday'];
 }
 ?>
 <!DOCTYPE html>
@@ -118,6 +170,91 @@ try {
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,600..800&family=Figtree:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="theme.css">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <style>
+        /* ---------- Product photos ---------- */
+        .pname { gap: .9rem; }
+        .thumb { overflow: hidden; }
+        .pname .thumb { flex: none; width: 3.5rem; height: 3.5rem; border-radius: 12px; font-size: 1.4rem; }
+        .pname .thumb:not(.has-img) { display: grid; place-items: center; font-weight: 700; color: #fff; background: hsl(var(--h) 50% 32%); }
+        .thumb.has-img { padding: 0; background: #141A4A; box-shadow: 0 0 0 1px rgba(190, 182, 255, .3), 0 8px 20px -10px rgba(0, 0, 0, .7); }
+        .thumb img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; transition: transform .25s ease; }
+        .thumb a.zoom { display: block; width: 100%; height: 100%; border-radius: inherit; cursor: zoom-in; }
+        .thumb a.zoom:hover img { transform: scale(1.08); }
+        .thumb a.zoom:focus-visible { outline: 2px solid var(--cyan-soft, #67e8f9); outline-offset: 2px; }
+        .pname > span:last-child { font-weight: 600; }
+        .rs-name { display: flex; align-items: center; gap: .8rem; min-width: 0; }
+        .rs-name strong { min-width: 0; overflow-wrap: anywhere; }
+        .restock-list .thumb { flex: none; width: 3rem; height: 3rem; border-radius: 12px; font-size: 1.15rem; }
+        .rs-name .thumb:not(.has-img) { display: grid; place-items: center; font-weight: 700; color: #fff; background: hsl(var(--h) 50% 32%); }
+
+        /* ---------- Entrance ---------- */
+        @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 170, 90, .6); } 70% { box-shadow: 0 0 0 .55rem rgba(255, 170, 90, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 170, 90, 0); } }
+        .dash > .cards      { animation: rise .45s ease both .05s; }
+        .dash > .main-grid  { animation: rise .45s ease both .15s; }
+        .dash > .split      { animation: rise .45s ease both .25s; }
+
+        /* ---------- Greeting ---------- */
+        .dash-title h1 { letter-spacing: -.01em; }
+        .dash-title .dash-shop { opacity: .8; }
+
+        /* ---------- Summary cards ---------- */
+        .cards .card.kpi { position: relative; overflow: hidden; text-decoration: none;
+            background-image: linear-gradient(160deg, rgba(190, 182, 255, .10), rgba(190, 182, 255, 0) 55%);
+            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+        .cards .card.kpi:hover { transform: translateY(-3px); box-shadow: 0 20px 36px -22px rgba(0, 0, 0, .85); border-color: rgba(190, 182, 255, .45); }
+        .cards .card.kpi:focus-visible { outline: 2px solid var(--cyan-soft, #67e8f9); outline-offset: 3px; }
+        .kpi h3 { padding-right: 3.2rem; }
+        .kpi .kpi-icon { position: absolute; top: 1rem; right: 1rem; display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 13px;
+            background: rgba(103, 232, 249, .12); color: var(--cyan-soft, #67e8f9); }
+        .kpi .kpi-icon svg { width: 1.3rem; height: 1.3rem; }
+        .kpi.alert-card .kpi-icon { background: rgba(255, 170, 90, .16); color: #ffb870; }
+        .kpi .number { font-variant-numeric: tabular-nums; }
+        .kpi .trend { font-weight: 600; }
+        .kpi .trend.up { color: #6ee7a8; }
+        .kpi .trend.down { color: #ff9b9b; }
+
+        /* ---------- Panels and tables ---------- */
+        .dash .panel-head h2 { letter-spacing: -.005em; }
+        .dash table tbody tr { transition: background-color .15s ease; }
+        .dash table tbody tr:not(.empty-row):hover { background: rgba(190, 182, 255, .07); }
+        .dash .more { margin-top: 1rem; text-align: center; }
+
+        /* ---------- Low stock alerts ---------- */
+        .restock .panel-head h2 { display: flex; align-items: center; gap: .6rem; }
+        .restock .panel-head h2::before { content: ""; flex: none; width: .65rem; height: .65rem; border-radius: 50%; background: #ffaa5a; animation: pulse 1.8s ease-out infinite; }
+        .restock-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .35rem; }
+        .restock-list li { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .5rem .6rem; border-radius: 14px; transition: background-color .15s ease; }
+        .restock-list li:hover { background: rgba(255, 170, 90, .08); }
+        .rs-qty { flex: none; padding: .2rem .7rem; border-radius: 999px; font-size: .85rem; font-weight: 700; white-space: nowrap;
+            background: rgba(255, 170, 90, .16); color: #ffc58f; }
+        .rs-qty.out { background: rgba(255, 110, 110, .16); color: #ffabab; }
+
+        /* ---------- Recent sales ---------- */
+        .sale-row { display: flex; align-items: center; gap: .75rem; min-width: 0; }
+        .sale-ic { flex: none; display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 10px;
+            background: rgba(103, 232, 249, .12); color: var(--cyan-soft, #67e8f9); }
+        .sale-ic svg { width: 1.1rem; height: 1.1rem; }
+        .sale-row > span:last-child a { font-weight: 700; }
+        .mini li .amt { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+        @media (max-width: 560px) { .pname .thumb { width: 3rem; height: 3rem; font-size: 1.2rem; } }
+        @media (prefers-reduced-motion: reduce) {
+            .dash > .cards, .dash > .main-grid, .dash > .split { animation: none; }
+            .restock .panel-head h2::before { animation: none; }
+            .thumb img, .cards .card.kpi, .dash table tbody tr, .restock-list li { transition: none; }
+            .cards .card.kpi:hover { transform: none; }
+        }
+        @media print { .dash > * { animation: none !important; } .cards .card.kpi:hover { transform: none; } }
+
+        /* ---------- Photo viewer ---------- */
+        dialog.viewer { width: min(820px, calc(100% - 2rem)); padding: 0; border: 1px solid var(--line-strong, #4a4f8a); border-radius: 18px; overflow: hidden; background: #0E1236; color: var(--text, #fff); }
+        dialog.viewer::backdrop { background: rgba(4, 6, 24, .78); }
+        dialog.viewer img { display: block; width: 100%; max-height: 78dvh; object-fit: contain; background: #fff; }
+        dialog.viewer p { margin: 0; padding: .85rem 1.1rem; font-weight: 600; }
+        dialog.viewer button { position: absolute; top: .6rem; right: .6rem; width: 2.4rem; height: 2.4rem; border: 0; border-radius: 50%; background: rgba(10, 14, 42, .85); color: #fff; font-size: 1.3rem; cursor: pointer; }
+        dialog.viewer button:focus-visible { outline: 2px solid var(--cyan-soft, #67e8f9); outline-offset: 2px; }
+    </style>
 </head>
 <body>
 
@@ -131,7 +268,7 @@ try {
     ?>
     <header class="dash-head">
         <div class="dash-title">
-            <h1>Dashboard overview</h1>
+            <h1><?= e($greeting) ?></h1>
             <p class="dash-shop">Honey's Dressed Chicken and Frozen Food</p>
             <?php if ($headStatus): ?>
             <p class="dash-status <?= $headStatus ?>">
@@ -164,30 +301,34 @@ try {
         $weekMax    = max(array_merge([1], $weekTotals));
         $weekSum    = array_sum($weekTotals);
         $topMax     = $top ? max(array_merge([1], array_map('floatval', array_column($top, 'qty')))) : 1;
-        $todayStr   = date('Y-m-d');
     ?>
 
     <div class="cards">
-        <a class="card" href="products.php">
+        <a class="card kpi" href="products.php">
+            <span class="kpi-icon"><?= dash_icon('box') ?></span>
             <h3>Total products</h3>
             <p class="number"><?= number_format($nProducts) ?></p>
         </a>
 
-        <a class="card" href="products.php">
+        <a class="card kpi" href="products.php">
+            <span class="kpi-icon"><?= dash_icon('layers') ?></span>
             <h3>Units in stock</h3>
             <p class="number"><?= number_format((int)$stats['stock']) ?></p>
         </a>
 
-        <a class="card <?= $lowNow > 0 ? 'alert-card' : '' ?>" href="products.php?status=low">
+        <a class="card kpi <?= $lowNow > 0 ? 'alert-card' : '' ?>" href="products.php?status=low">
+            <span class="kpi-icon"><?= dash_icon('alert') ?></span>
             <h3>Low-stock items <?php if ($lowNow > 0): ?><span class="count"><?= $lowNow ?></span><?php endif; ?></h3>
             <p class="number <?= $lowNow > 0 ? 'warn' : '' ?>"><?= $lowNow ?></p>
             <?php if ($nOut > 0): ?><p class="sub"><?= $nOut ?> out of stock</p><?php endif; ?>
         </a>
 
-        <a class="card" href="history.php?from=<?= e($todayStr) ?>&amp;to=<?= e($todayStr) ?>">
+        <a class="card kpi" href="history.php?from=<?= e($todayStr) ?>&amp;to=<?= e($todayStr) ?>">
+            <span class="kpi-icon"><?= dash_icon('cash') ?></span>
             <h3>Sales today</h3>
             <p class="number"><?= peso($today['total']) ?></p>
             <p class="sub"><?= $nReceipts ?> <?= $nReceipts === 1 ? 'receipt' : 'receipts' ?></p>
+            <?php if ($trend): ?><p class="sub trend <?= $trend['up'] ? 'up' : 'down' ?>"><?= $trend['up'] ? '&#9650;' : '&#9660;' ?> <?= e($trend['text']) ?></p><?php endif; ?>
         </a>
     </div>
 
@@ -211,7 +352,7 @@ try {
                     </thead>
                     <tbody>
                     <?php if (!$products): ?>
-                        <tr>
+                        <tr class="empty-row">
                             <td colspan="5" class="empty">
                                 No products yet. <a href="products.php#add-product">Add your first product</a>.
                             </td>
@@ -237,13 +378,11 @@ try {
                             $badgeClass = 'available';
                             $badgeText  = 'In stock';
                         }
-                        $hue = crc32(strtolower((string)$p['product_name'])) % 360;
-                        $ltr = function_exists('mb_substr') ? mb_strtoupper(mb_substr((string)$p['product_name'], 0, 1)) : strtoupper(substr((string)$p['product_name'], 0, 1));
                     ?>
                         <tr class="<?= $level !== 'ok' ? 'is-low' : '' ?>">
                             <td>
                                 <div class="pname">
-                                    <span class="thumb" style="--h: <?= (int)$hue ?>" aria-hidden="true"><?= e($ltr) ?></span>
+                                    <?= product_thumb($p) ?>
                                     <span><?= e($p['product_name']) ?></span>
                                 </div>
                             </td>
@@ -275,13 +414,14 @@ try {
                     <a class="btn no-print" href="products.php?status=low">View all</a>
                 </div>
                 <ul class="restock-list">
-                    <?php foreach ($restock as $r): ?>
+                    <?php foreach ($restock as $r): $out = (int)$r['quantity'] === 0; ?>
                     <li>
-                        <strong><?= e($r['product_name']) ?></strong>
-                        <span>
-                            <?= (int)$r['quantity'] === 0
-                                ? 'Out of stock'
-                                : '(' . number_format((int)$r['quantity']) . ' ' . e($r['unit']) . ' left)' ?>
+                        <span class="rs-name">
+                            <?= product_thumb($r) ?>
+                            <strong><?= e($r['product_name']) ?></strong>
+                        </span>
+                        <span class="rs-qty <?= $out ? 'out' : '' ?>">
+                            <?= $out ? 'Out of stock' : number_format((int)$r['quantity']) . ' ' . e($r['unit']) . ' left' ?>
                         </span>
                     </li>
                     <?php endforeach; ?>
@@ -358,9 +498,12 @@ try {
                     $ts = strtotime($s['sale_date']);
                 ?>
                 <li>
-                    <span>
-                        <a href="history.php?receipt=<?= (int)$s['id'] ?>">SALE-<?= (int)$s['id'] ?></a>
-                        <small><?= $ts ? e(date('M j, Y g:i A', $ts)) : e($s['sale_date']) ?></small>
+                    <span class="sale-row">
+                        <span class="sale-ic"><?= dash_icon('receipt') ?></span>
+                        <span>
+                            <a href="history.php?receipt=<?= (int)$s['id'] ?>">SALE-<?= (int)$s['id'] ?></a>
+                            <small><?= $ts ? e(date('M j, Y g:i A', $ts)) : e($s['sale_date']) ?></small>
+                        </span>
                     </span>
                     <span class="amt"><?= peso($s['total_amount']) ?></span>
                 </li>
@@ -374,6 +517,39 @@ try {
 </div>
 </main>
 
+<dialog class="viewer" id="viewer" aria-label="Product photo">
+    <button type="button" id="viewerClose" aria-label="Close photo">&times;</button>
+    <img id="viewerImg" alt="">
+    <p id="viewerCap"></p>
+</dialog>
+
+<script>
+(function () {
+    /* Click a product photo to see it larger */
+    var viewer = document.getElementById('viewer');
+    if (!viewer || !viewer.showModal) return;
+    var img = document.getElementById('viewerImg');
+    var cap = document.getElementById('viewerCap');
+    var lastLink = null;
+
+    document.querySelectorAll('a.zoom').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+            e.preventDefault();
+            lastLink = a;
+            img.src = a.href;
+            img.alt = a.dataset.zoom || '';
+            cap.textContent = a.dataset.zoom || '';
+            viewer.showModal();
+        });
+    });
+    document.getElementById('viewerClose').addEventListener('click', function () { viewer.close(); });
+    viewer.addEventListener('click', function (e) { if (e.target === viewer) viewer.close(); });
+    viewer.addEventListener('close', function () {
+        img.removeAttribute('src');
+        if (lastLink) lastLink.focus();
+    });
+})();
+</script>
 <script src="app.js" defer></script>
 </body>
 </html>

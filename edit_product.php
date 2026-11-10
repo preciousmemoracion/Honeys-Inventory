@@ -3,6 +3,7 @@ require_once "auth.php";
 require_login();
 
 require_once "helpers.php";
+require_once "product_image.php";
 
 date_default_timezone_set('Asia/Manila');
 
@@ -170,7 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-/* Reload so the page always shows the stored numbers. */
+/* Reload so the page always shows the stored numbers (and the current photo). */
 $product = db_all($conn, "SELECT * FROM products WHERE id = ?", 'i', [(int)$product['id']])[0] ?? $product;
 $qty = (int)$product['quantity'];
 $low = (int)$product['low_stock_level'];
@@ -211,6 +212,31 @@ try {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,600..800&family=Figtree:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="theme.css">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <style>
+        /* Product photo beside the page title */
+        .ph-head { display: flex; align-items: center; gap: 1.1rem; min-width: 0; }
+        .ph-head > div { min-width: 0; }
+        .ph-head .dash-shop { overflow-wrap: anywhere; }
+        .ph-head .thumb { flex: none; width: 5.5rem; height: 5.5rem; border-radius: 16px; overflow: hidden; font-size: 2rem; }
+        .ph-head .thumb:not(.has-img) { display: grid; place-items: center; font-weight: 700; color: #fff; background: hsl(var(--h, 230) 50% 32%); }
+        .thumb.has-img { padding: 0; background: #141A4A; box-shadow: 0 0 0 1px rgba(190, 182, 255, .3), 0 10px 24px -10px rgba(0, 0, 0, .7); }
+        .thumb img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; transition: transform .25s ease; }
+        .thumb a.zoom { display: block; width: 100%; height: 100%; border-radius: inherit; cursor: zoom-in; }
+        .thumb a.zoom:hover img { transform: scale(1.08); }
+        .thumb a.zoom:focus-visible { outline: 2px solid var(--cyan-soft, #67e8f9); outline-offset: 2px; }
+        @media (max-width: 520px) { .ph-head .thumb { width: 4.25rem; height: 4.25rem; font-size: 1.6rem; } }
+        @media (prefers-reduced-motion: reduce) { .thumb img { transition: none; } }
+        @media print { .thumb { box-shadow: none; } .thumb a.zoom { pointer-events: none; } }
+
+        /* Click-to-enlarge photo viewer */
+        dialog.viewer { width: min(820px, calc(100% - 2rem)); padding: 0; border: 1px solid var(--line-strong, #4a4f8a); border-radius: 18px; overflow: hidden; background: #0E1236; color: var(--text, #fff); }
+        dialog.viewer::backdrop { background: rgba(4, 6, 24, .78); }
+        dialog.viewer img { display: block; width: 100%; max-height: 78dvh; object-fit: contain; background: #fff; }
+        dialog.viewer p { margin: 0; padding: .85rem 1.1rem; font-weight: 600; }
+        dialog.viewer button { position: absolute; top: .6rem; right: .6rem; width: 2.4rem; height: 2.4rem; border: 0; border-radius: 50%; background: rgba(10, 14, 42, .85); color: #fff; font-size: 1.3rem; cursor: pointer; }
+        dialog.viewer button:focus-visible { outline: 2px solid var(--cyan-soft, #67e8f9); outline-offset: 2px; }
+    </style>
 </head>
 <body>
 
@@ -219,9 +245,12 @@ try {
 <main class="content">
 <div class="dash">
     <header class="dash-head">
-        <div>
-            <h1>Edit product</h1>
-            <p class="dash-shop"><?= e($product['product_name']) ?></p>
+        <div class="ph-head">
+            <?= product_thumb($product) ?>
+            <div>
+                <h1>Edit product</h1>
+                <p class="dash-shop"><?= e($product['product_name']) ?></p>
+            </div>
         </div>
         <nav class="actions no-print" aria-label="Quick actions">
             <a class="btn primary" href="stock_in.php?product=<?= (int)$product['id'] ?>">Record delivery</a>
@@ -398,6 +427,40 @@ try {
     </details>
 </div>
 </main>
+
+<dialog class="viewer" id="viewer" aria-label="Product photo">
+    <button type="button" id="viewerClose" aria-label="Close photo">&times;</button>
+    <img id="viewerImg" alt="">
+    <p id="viewerCap"></p>
+</dialog>
+
+<script>
+(function () {
+    /* Click the product photo to see it larger */
+    var viewer = document.getElementById('viewer');
+    if (!viewer || !viewer.showModal) return;
+    var img = document.getElementById('viewerImg');
+    var cap = document.getElementById('viewerCap');
+    var lastLink = null;
+
+    document.querySelectorAll('a.zoom').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+            e.preventDefault();
+            lastLink = a;
+            img.src = a.href;
+            img.alt = a.dataset.zoom || '';
+            cap.textContent = a.dataset.zoom || '';
+            viewer.showModal();
+        });
+    });
+    document.getElementById('viewerClose').addEventListener('click', function () { viewer.close(); });
+    viewer.addEventListener('click', function (e) { if (e.target === viewer) viewer.close(); });
+    viewer.addEventListener('close', function () {
+        img.removeAttribute('src');
+        if (lastLink) lastLink.focus();
+    });
+})();
+</script>
 <script src="app.js" defer></script>
 </body>
 </html>
