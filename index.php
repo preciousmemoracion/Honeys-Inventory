@@ -188,7 +188,7 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
         .slide.cutout .ph::after { background: radial-gradient(circle at 78% 86%, rgba(124, 107, 255, .3), transparent 62%); }
 
         .cap { position: relative; padding: 0 .5rem .2rem; text-align: center; }
-        .cap .chip { display: inline-block; margin-bottom: .5rem; padding: .15rem .65rem; border-radius: 999px; background: var(--ok-bg); color: #9DF3E9;
+        .cap .tag { display: inline-block; margin-bottom: .5rem; padding: .15rem .65rem; border-radius: 999px; background: var(--ok-bg); color: #9DF3E9;
             font-size: .8rem; font-weight: 600; }
         .cap h3 { margin: 0 0 .25rem; font: 700 clamp(1.3rem, 2.4vw, 1.7rem) var(--display); letter-spacing: -.01em; }
         .cap p { max-width: 30em; margin: 0 auto; color: var(--muted); font-size: .95rem; line-height: 1.45; }
@@ -388,6 +388,80 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
             .steps { grid-template-columns: minmax(0, 1fr); }
         }
         @media (max-width: 430px) { .nav-right .btn { padding-inline: .9rem; } }
+        /* ---------- Polish: layout and shape refinements (original colors kept) ---------- */
+        :root { --hex: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%); }
+
+        .brand-mark { width: 2.7rem; height: 3rem; border-radius: 0; clip-path: var(--hex); box-shadow: none; }
+        .btn:focus-visible, .nav-links a:focus-visible, .dot:focus-visible { outline: 2px solid var(--cyan-soft); outline-offset: 3px; }
+
+        /* Hero: tighter vertical rhythm, readable headline, faint honeycomb behind the showcase */
+        .hero { min-height: min(740px, calc(100svh - 5rem)); padding-block: clamp(2rem, 5vw, 3.75rem); }
+        .hero::before { content: ""; position: absolute; z-index: -1; inset: 0 -6vw 0 28%; pointer-events: none; opacity: .9;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cpath d='M28 0 56 16.2v32.3L28 64.7 0 48.5V16.2zM28 64.7V97' fill='none' stroke='%23C9C2FF' stroke-opacity='.15'/%3E%3C/svg%3E");
+            -webkit-mask-image: radial-gradient(58% 70% at 72% 46%, #000, transparent 78%); mask-image: radial-gradient(58% 70% at 72% 46%, #000, transparent 78%); }
+        .hero h1 { font-variation-settings: "wdth" 92, "opsz" 80; letter-spacing: -.012em; line-height: 1.05; text-wrap: balance; }
+        .hero p.lead { font-size: 1.15rem; line-height: 1.65; }
+        .cta .btn.primary { box-shadow: 0 16px 32px -14px rgba(99, 88, 242, .95), inset 0 1px 0 rgba(255, 255, 255, .22); }
+        .hero .meta { gap: .5rem; }
+        .hero .meta li { display: inline-flex; align-items: center; padding: .35rem .8rem; border: 1px solid var(--line);
+            border-radius: 999px; background: rgba(255, 255, 255, .04); color: var(--text); font-size: .9rem; }
+
+        /* Showcase caption tag (was inheriting the tall .chip from theme.css) */
+        .cap .tag { display: inline-flex; align-items: center; margin-bottom: .55rem; padding: .2rem .75rem; border-radius: 999px;
+            background: var(--ok-bg); color: #9DF3E9; font-size: .82rem; font-weight: 600; line-height: 1.3; }
+        .cap h3 { margin-bottom: .3rem; }
+        @media (min-width: 901px) { .stage { aspect-ratio: 1 / 1.1; } }
+
+        /* What's on the shelf */
+        .shelf { padding-bottom: clamp(2.5rem, 6vw, 4rem); }
+        .shelf-list { display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem; margin: 0; padding: 1.25rem 0; list-style: none;
+            border-block: 1px solid var(--line); }
+        .shelf-list li { display: inline-flex; align-items: center; gap: .55rem; padding: .4rem .95rem .4rem .75rem; border-radius: 999px;
+            background: rgba(255, 255, 255, .05); color: var(--text); font-weight: 500; font-size: .95rem; }
+        .shelf-list li::before { content: ""; width: .6rem; height: .66rem; background: var(--cyan); clip-path: var(--hex); }
+
+        /* Features and contact: same colors as before, refined shapes and spacing */
+        .features { gap: 1.15rem; }
+        .feature { padding: 1.6rem 1.4rem; }
+        .feature .ico, .ccard .ico { width: 3rem; height: 3.3rem; border-radius: 0; clip-path: var(--hex); }
+        .feature h3 { font-size: 1.2rem; }
+        .feature p { line-height: 1.6; }
+        .steps li { border-style: solid; border-color: var(--line); background: rgba(255, 255, 255, .03); }
+        .steps li::before { width: 2.5rem; height: 2.8rem; border-radius: 0; clip-path: var(--hex); top: 1rem; }
+        .js .reveal { transform: translateY(12px); transition-duration: .45s; }
+
+        /* Persuasion: comparison block and feature layout */
+        .compare { padding-bottom: clamp(3rem, 7vw, 5rem); }
+        .cmp-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.15rem; }
+        .cmp { padding: 1.6rem 1.5rem; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(255, 255, 255, .03); }
+        .cmp h3 { margin: 0 0 1.1rem; font: 700 1.2rem var(--display); }
+        .cmp ul { display: grid; gap: .85rem; margin: 0; padding: 0; list-style: none; }
+        .cmp li { position: relative; padding-left: 1.95rem; color: var(--muted); line-height: 1.5; }
+        .cmp li::before { position: absolute; left: 0; top: .08rem; display: grid; place-items: center; width: 1.3rem; height: 1.3rem;
+            border-radius: 50%; font-size: .72rem; font-weight: 700; line-height: 1; }
+        .cmp.before li::before { content: "\2715"; background: var(--out-bg); color: var(--out-text); }
+        .cmp.after { border-color: rgba(190, 182, 255, .4); background: linear-gradient(160deg, rgba(124, 107, 255, .28), rgba(34, 211, 238, .06) 80%); }
+        .cmp.after li { color: var(--text); }
+        .cmp.after li::before { content: "\2713"; background: var(--ok-bg); color: #9DF3E9; }
+
+        .features { grid-template-columns: repeat(12, minmax(0, 1fr)); padding-bottom: clamp(2.5rem, 5vw, 3.5rem); }
+        .feature:nth-child(1), .feature:nth-child(4) { grid-column: span 7; }
+        .feature:nth-child(2), .feature:nth-child(3) { grid-column: span 5; }
+        .feature .pills { display: flex; flex-wrap: wrap; gap: .4rem; margin: 1.1rem 0 0; padding: 0; list-style: none; }
+        .feature .pills li { padding: .2rem .7rem; border-radius: 999px; background: rgba(255, 255, 255, .07); color: var(--cyan-soft); font-size: .82rem; font-weight: 600; }
+        .steps-head { margin-bottom: 1.25rem; }
+        .steps-head h2 { font-size: clamp(1.5rem, 2.8vw, 2rem); }
+
+        @media (max-width: 900px) {
+            .cmp-grid { grid-template-columns: minmax(0, 1fr); }
+            .features { grid-template-columns: minmax(0, 1fr); }
+            .feature:nth-child(n) { grid-column: auto; }
+        }
+
+        @media (max-width: 900px) {
+            .hero { min-height: 0; }
+            .hero::before { inset: 0; opacity: .6; }
+        }
     </style>
 </head>
 <body>
@@ -428,7 +502,7 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
         <div class="reveal">
             <p class="eyebrow">Inventory system for Honey's</p>
             <h1 id="hero-title">Know what's in the freezer, <em>always.</em></h1>
-            <p class="lead">Keep track of stock, ring up customers, and record supplier deliveries in one place, so nothing runs out unnoticed.</p>
+            <p class="lead">Track stock, ring up sales and log supplier deliveries in one place. You'll see what's running low before a customer asks.</p>
             <div class="cta">
                 <?php if ($loggedIn): ?>
                     <a class="btn primary" href="dashboard.php">Open dashboard</a>
@@ -466,7 +540,7 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
                         <span class="fl b"><svg viewBox="0 0 24 24"><path d="M11 2h2v3.1a7 7 0 0 1 0 13.8V22h-2v-3.1A7 7 0 0 1 11 5.1V2zm1 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/></svg></span>
                     </div>
                     <div class="ph"><img src="images/img/whole-chicken.jpeg" alt="Whole dressed chicken" decoding="async" onload="this.closest('.slide').classList.add('has-photo')" onerror="this.parentNode.remove()"></div>
-                    <div class="cap"><span class="chip">Fresh daily</span><h3>Whole dressed chicken</h3><p>Cleaned, dressed and ready for the pot or the grill.</p></div>
+                    <div class="cap"><span class="tag">Fresh daily</span><h3>Whole dressed chicken</h3><p>Cleaned, dressed and ready for the pot or the grill.</p></div>
                 </article>
 
                 <!-- 3. Hotdogs -->
@@ -484,7 +558,7 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
                         <span class="fl warm b"><svg viewBox="0 0 24 24"><path d="M12 2l2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2z"/></svg></span>
                     </div>
                     <div class="ph"><img src="images/img/hotdog.jpg" alt="Frozen hotdogs and sausages" decoding="async" onload="this.closest('.slide').classList.add('has-photo')" onerror="this.parentNode.remove()"></div>
-                    <div class="cap"><span class="chip">Frozen</span><h3>Hotdogs and sausages</h3><p>Packs for the kids' snack and the weekend barbecue.</p></div>
+                    <div class="cap"><span class="tag">Frozen</span><h3>Hotdogs and sausages</h3><p>Packs for the kids' snack and the weekend barbecue.</p></div>
                 </article>
 
                 <!-- 4. Frozen favorites -->
@@ -503,9 +577,8 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
                         <span class="fl c"><svg viewBox="0 0 24 24"><path d="M11 2h2v7.6l5.9-3.4 1 1.7L14 11.3l5.9 3.4-1 1.7-5.9-3.4V22h-2v-9.6l-5.9 3.4-1-1.7L10 11.3 4.1 7.9l1-1.7L11 9.6V2z"/></svg></span>
                     </div>
                     <div class="ph"><img src="images/img/frozen-food.jpg" alt="Packs of frozen ham, tocino and sausages" decoding="async" onload="this.closest('.slide').classList.add('has-photo')" onerror="this.parentNode.remove()"></div>
-                    <div class="cap"><span class="chip">Keep frozen</span><h3>Frozen favorites</h3><p>Ham, tocino and other ready-to-cook packs, kept cold until you take them home.</p></div>
+                    <div class="cap"><span class="tag">Keep frozen</span><h3>Frozen favorites</h3><p>Ham, tocino and other ready-to-cook packs, kept cold until you take them home.</p></div>
                 </article>
-
             </div>
 
             <div class="dots" role="group" aria-label="Choose a product">
@@ -516,36 +589,77 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
         </div>
     </section>
 
+    <section class="wrap shelf reveal" aria-label="What we sell">
+        <ul class="shelf-list">
+            <li>Whole dressed chicken</li><li>Chicken breast</li><li>Chicken wings</li><li>Hotdogs</li>
+            <li>Chicken nuggets</li><li>Longganisa</li><li>Tocino</li><li>Ham</li>
+        </ul>
+    </section>
+
+    <section class="wrap compare" aria-labelledby="cmp-title">
+        <div class="section-head reveal">
+            <h2 id="cmp-title">A notebook can't tell you when you're running low</h2>
+            <p>Honey's Inventory does the counting, so you can focus on your customers.</p>
+        </div>
+        <div class="cmp-grid">
+            <article class="cmp before reveal">
+                <h3>With a paper notebook</h3>
+                <ul>
+                    <li>Counts are out of date by the afternoon</li>
+                    <li>Receipts get lost or are hard to find</li>
+                    <li>You learn something ran out when a customer asks</li>
+                    <li>Totals mean adding up pages by hand</li>
+                </ul>
+            </article>
+            <article class="cmp after reveal" style="--rd: .1s">
+                <h3>With Honey's Inventory</h3>
+                <ul>
+                    <li>Stock updates on every sale and delivery</li>
+                    <li>Receipts are saved, searchable by date and printable</li>
+                    <li>Low-stock items are flagged on the dashboard</li>
+                    <li>Sales totals and best sellers are one click away</li>
+                </ul>
+            </article>
+        </div>
+    </section>
+
     <section class="wrap" id="features" aria-labelledby="features-title">
         <div class="section-head reveal">
-            <h2 id="features-title">Everything the shop needs day to day</h2>
-            <p>Simple tools for the counter and the stockroom.</p>
+            <h2 id="features-title">Everything the shop needs, day to day</h2>
+            <p>Built for the counter and the stockroom, so each job takes a few taps.</p>
         </div>
         <div class="features">
             <article class="feature reveal">
                 <span class="ico" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2l-5.5 9h11L12 2zm5.5 11c-2.49 0-4.5 2.01-4.5 4.5s2.01 4.5 4.5 4.5 4.5-2.01 4.5-4.5-2.01-4.5-4.5-4.5zM3 21.5h8v-8H3v8z"/></svg></span>
-                <h3>Products and stock</h3>
-                <p>See every item, its price and how much is left, with warnings when stock runs low.</p>
+                <h3>Never run out unnoticed</h3>
+                <p>Set an alert level for every product. When stock gets low, the dashboard tells you before a customer finds the empty shelf.</p>
+                <ul class="pills"><li>Low-stock alerts</li><li>Stock gauges</li><li>Product photos</li></ul>
             </article>
-            <article class="feature reveal" style="--rd: .08s">
+            <article class="feature reveal" style="--rd: 0.08s">
                 <span class="ico" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M18 17H6v-2h12v2zm0-4H6v-2h12v2zm0-4H6V7h12v2zM3 22l1.5-1.5L6 22l1.5-1.5L9 22l1.5-1.5L12 22l1.5-1.5L15 22l1.5-1.5L18 22l1.5-1.5L21 22V2l-1.5 1.5L18 2l-1.5 1.5L15 2l-1.5 1.5L12 2l-1.5 1.5L9 2 7.5 3.5 6 2 4.5 3.5 3 2v20z"/></svg></span>
-                <h3>Sales and receipts</h3>
-                <p>Ring up a sale, print the receipt, and look up past sales any time.</p>
+                <h3>Sell faster, with fewer mistakes</h3>
+                <p>Ring up several items on one receipt. Stock goes down automatically, and any past receipt can be found by date and printed.</p>
+                <ul class="pills"><li>Multi-item receipts</li><li>Printable</li></ul>
             </article>
-            <article class="feature reveal" style="--rd: .16s">
+            <article class="feature reveal" style="--rd: 0.16s">
                 <span class="ico" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M19 3H4.99c-1.11 0-1.98.9-1.98 2L3 19c0 1.1.88 2 1.99 2H19c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 12h-4c0 1.66-1.35 3-3 3s-3-1.34-3-3H4.99V5H19v10zm-3-5h-2V7h-4v3H8l4 4 4-4z"/></svg></span>
-                <h3>Deliveries</h3>
-                <p>Record what suppliers bring in and stock levels update right away.</p>
+                <h3>Know exactly what arrived</h3>
+                <p>Log each supplier delivery in seconds. Stock updates right away, and the stock log keeps a record of every item that comes in or goes out.</p>
+                <ul class="pills"><li>Instant updates</li><li>Full stock log</li></ul>
             </article>
-            <article class="feature reveal" style="--rd: .24s">
+            <article class="feature reveal" style="--rd: 0.24s">
                 <span class="ico" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z"/></svg></span>
-                <h3>Reports</h3>
-                <p>Daily sales, best sellers and category totals, ready to print or export to CSV.</p>
+                <h3>See what sells best</h3>
+                <p>Daily sales, best sellers and category totals show what to reorder. Export to CSV when you want it in Excel.</p>
+                <ul class="pills"><li>Best sellers</li><li>Sales by day</li><li>CSV export</li></ul>
             </article>
         </div>
 
+        <div class="section-head steps-head reveal">
+            <h2>Set it up once, then it keeps count for you</h2>
+        </div>
         <ol class="steps">
-            <li class="reveal"><b>Add your products</b><span>Set prices, units and when to be warned about low stock.</span></li>
+            <li class="reveal"><b>Add your products</b><span>Enter prices and units, and choose when you want a low-stock warning.</span></li>
             <li class="reveal" style="--rd: .1s"><b>Sell and receive</b><span>Sales take stock out and deliveries put it back, automatically.</span></li>
             <li class="reveal" style="--rd: .2s"><b>Check the numbers</b><span>Open reports to see what sells best and what to reorder.</span></li>
         </ol>
@@ -555,8 +669,8 @@ $signInHref    = 'index.php?login=1' . ($next !== 'dashboard.php' ? '&next=' . u
     <section class="wrap" aria-label="Sign in">
         <div class="band reveal">
             <div>
-                <h2>Ready to get started?</h2>
-                <p>Only the admin account can sign in.</p>
+                <h2>Stop counting by hand</h2>
+                <p>Sign in to see today's stock and sales. Admin account only.</p>
             </div>
             <a class="btn primary" href="<?= e($signInHref) ?>" data-open-login>Sign in</a>
         </div>
